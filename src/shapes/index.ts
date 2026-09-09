@@ -1,7 +1,5 @@
 import type { Bounds, EdgeStyle, Point, ShapeGeometry, ShapeId } from "../types";
 import { buildSpeech } from "./speech";
-import { buildGlitch } from "./glitch";
-import { buildShatter } from "./shatter";
 import { buildRefSheetShape, isRefShapeId } from "./ref-sheet";
 import { defaultCornerRadius, defaultEdge } from "./rounded-rect";
 
@@ -15,6 +13,10 @@ export interface ShapeBuildInput {
   attachment: "top" | "right" | "bottom" | "left" | "auto";
   cornerRadius?: number;
   edge?: EdgeStyle;
+  notchTop?: boolean;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
 }
 
 export function resolveStyle(
@@ -36,7 +38,8 @@ export function buildShape(input: ShapeBuildInput): ShapeGeometry {
     return buildRefSheetShape(input.shapeId, input.body, input.lobeBodies ?? []);
   }
   const style = resolveStyle(input.shapeId, input.cornerRadius, input.edge);
-  const common = {
+  // Rounded-rect family is a single public shape: speech.
+  return buildSpeech({
     body: input.body,
     lobeBodies: input.lobeBodies ?? [],
     tip: input.tip,
@@ -44,17 +47,9 @@ export function buildShape(input: ShapeBuildInput): ShapeGeometry {
     attachment: input.attachment,
     cornerRadius: style.cornerRadius,
     edge: style.edge,
-  };
-  switch (input.shapeId) {
-    case "speech":
-      return buildSpeech(common);
-    case "glitch":
-      return buildGlitch(common);
-    case "shatter":
-      return buildShatter(common);
-    default: {
-      const _exhaustive: never = input.shapeId;
-      return _exhaustive;
-    }
-  }
+    notchTop: input.notchTop,
+    fill: input.fill,
+    stroke: input.stroke,
+    strokeWidth: input.strokeWidth,
+  });
 }

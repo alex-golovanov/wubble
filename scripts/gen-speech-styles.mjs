@@ -44,20 +44,20 @@ const SHARED_LINES = ["We keep", "moving."];
 
 const variants = [
   {
-    name: "human-soft",
-    label: "human · radius 1 · smooth",
+    name: "soft",
+    label: "Soft · radius 1 · smooth",
     extra: { cornerRadius: 1, edge: "smooth" },
     lines: SHARED_LINES,
   },
   {
-    name: "glitch-square",
-    label: "glitch reuse · radius 0 · smooth",
+    name: "square",
+    label: "Square · radius 0 · smooth",
     extra: { cornerRadius: 0, edge: "smooth" },
     lines: SHARED_LINES,
   },
   {
-    name: "glitch-jagged",
-    label: "glitch reuse · radius 0 · jagged",
+    name: "jagged",
+    label: "Jagged · radius 0 · jagged",
     extra: { cornerRadius: 0, edge: "jagged" },
     lines: SHARED_LINES,
   },
@@ -81,7 +81,7 @@ for (const v of variants) {
     .resize(640, 560, { fit: "contain", background: BG })
     .png()
     .toBuffer();
-  writeFileSync(join(outDir, `glitch-reuse-${v.name}.png`), png);
+  writeFileSync(join(outDir, `speech-styles-${v.name}.png`), png);
   cells.push({ ...v, png });
   console.log("ok", v.name);
 }
@@ -112,8 +112,8 @@ const composites = cells.map((c, i) => ({
 await sharp(base)
   .composite(composites)
   .png()
-  .toFile(join(outDir, "glitch-reuse-strip.png"));
-console.log("wrote glitch-reuse-strip.png");
+  .toFile(join(outDir, "speech-styles-strip.png"));
+console.log("wrote speech-styles-strip.png");
 
 // Stress: longer copy, soft vs square side-by-side (same lines + placement).
 const STRESS_LINES = [
@@ -153,7 +153,7 @@ for (const v of stressVariants) {
     .resize(640, 560, { fit: "contain", background: BG })
     .png()
     .toBuffer();
-  writeFileSync(join(outDir, `glitch-reuse-${v.name}.png`), png);
+  writeFileSync(join(outDir, `speech-styles-${v.name}.png`), png);
   stressCells.push({ ...v, png });
   console.log("ok", v.name);
 }
@@ -180,6 +180,6 @@ for (const v of stressVariants) {
   await sharp(base)
     .composite(composites)
     .png()
-    .toFile(join(outDir, "glitch-reuse-stress-strip.png"));
-  console.log("wrote glitch-reuse-stress-strip.png");
+    .toFile(join(outDir, "speech-styles-stress-strip.png"));
+  console.log("wrote speech-styles-stress-strip.png");
 }

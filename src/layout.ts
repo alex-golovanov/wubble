@@ -329,7 +329,7 @@ export function fitBalloonText(
       continue;
     }
 
-    // --- Legacy absolute-pad path (human / glitch): expand steps then shrink type ---
+    // --- Legacy absolute-pad path (speech family): expand steps then shrink type ---
     // Usable lettering box shrinks with cornerRadius / jagged (same pad policy).
     const expandSteps = [1, 1.1, 1.2, 1.3, shape.maxExpandFactor];
     for (const expand of expandSteps) {

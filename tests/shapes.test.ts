@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderPage, validatePage } from "../src/index";
 import { PROFILE_ID, isShapeImplemented } from "../src/profile";
+import { buildRoundedBalloonPath } from "../src/shapes/rounded-rect";
 
 const root = join(import.meta.dir, "..");
 const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
@@ -10,34 +11,53 @@ const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
 describe("registered shapes", () => {
   test("all schema shapes are implemented", () => {
     expect(isShapeImplemented("speech")).toBe(true);
-    expect(isShapeImplemented("glitch")).toBe(true);
-    expect(isShapeImplemented("shatter")).toBe(true);
+    expect(isShapeImplemented("chain")).toBe(true);
+    expect(isShapeImplemented("cloud")).toBe(true);
+    expect(isShapeImplemented("glitch")).toBe(false);
+    expect(isShapeImplemented("shatter")).toBe(false);
   });
 
-  test("glitch renders single closed path distinct from speech", () => {
-    const g = load("fixtures/glitch.json");
+  test("speech + jagged knobs renders single closed path distinct from soft speech", () => {
+    const g = load("fixtures/speech-jagged.json");
     const h = load("examples/page-022.json");
     const gr = renderPage(g, { locale: "en", profileId: PROFILE_ID });
     const hr = renderPage(h, { locale: "en", profileId: PROFILE_ID });
     expect(gr.svg).not.toBeNull();
-    expect(gr.svg!).toContain('data-shape="glitch"');
+    expect(gr.svg!).toContain('data-shape="speech"');
     expect(gr.svg!).toContain('data-part="balloon"');
     expect(gr.svg!).toMatch(/data-part="balloon"[^>]*d="[^"]*Z"/);
     expect(gr.svg!).not.toContain('data-part="tail"');
     expect(gr.svg!).not.toEqual(hr.svg!);
-    // Both are single closed silhouettes; glitch defaults to jagged (more L cmds)
+    // Jagged outline uses more L commands than a soft pill
     expect(gr.svg!).toMatch(/ d="M [^"]*L /);
-    expect(gr.svg!).toMatch(/data-part="balloon"[^>]*d="[^"]*Z"/);
+    expect(gr.svg!).toContain('fill="#e7f2e9"');
   });
 
-  test("shatter renders single closed path", () => {
-    const m = load("fixtures/shatter.json");
+  test("speech + notchTop renders single closed path with notch", () => {
+    const m = load("fixtures/speech-notch.json");
     const r = renderPage(m, { locale: "en", profileId: PROFILE_ID });
     expect(r.svg).not.toBeNull();
-    expect(r.svg!).toContain('data-shape="shatter"');
+    expect(r.svg!).toContain('data-shape="speech"');
     expect(r.svg!).toMatch(/data-part="balloon"[^>]*d="[^"]*Z"/);
     const paths = r.svg!.match(/<path\b/g) ?? [];
     expect(paths.length).toBe(1);
+    expect(r.svg!).toContain('fill="#f3e6e6"');
+
+    // Path-level: notchTop differs from same knobs without notch
+    const body = { x: 100, y: 100, width: 400, height: 220 };
+    const tip = { x: 280, y: 420 };
+    const base = {
+      bodies: [body],
+      tip,
+      bend: null as null,
+      attachment: "bottom" as const,
+      cornerRadius: 0,
+      edge: "jagged" as const,
+    };
+    const plain = buildRoundedBalloonPath(base);
+    const notched = buildRoundedBalloonPath({ ...base, notchTop: true });
+    expect(notched).not.toEqual(plain);
+    expect(notched.split("L ").length).toBeGreaterThan(plain.split("L ").length);
   });
 
   test("speech tips in four directions hit anchors", () => {

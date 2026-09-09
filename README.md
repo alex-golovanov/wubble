@@ -56,17 +56,19 @@ All registered ids are implemented:
 
 | Family | IDs |
 | --- | --- |
-| Rounded-rect | `speech`, `glitch`, `shatter` |
+| Rounded-rect | `speech` |
 | Ref sheet | `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` |
 
-`speech` / `glitch` / `shatter` share one open-tail rounded-rect builder. Glitch look can also be authored as `speech` with `cornerRadius: 0` and `edge: "jagged"`. See [`FORMAT.md`](FORMAT.md) for the full catalog and content bands.
+`speech` is the single public rounded-rect shape (open-tail builder). Looks (soft / square / jagged / notched) are authoring knobs, not separate shapeIds. See [`FORMAT.md`](FORMAT.md) for recipes and content bands.
 
 ## Balloon styling knobs
 
 Optional per-balloon fields (schema `0.1.0`):
 
-- **`cornerRadius`** — `0..1` × `min(body.w, body.h) / 2`. `0` = sharp rectangle, `1` = full pill. Defaults: `speech` → `1`, `glitch` / `shatter` → `0`.
-- **`edge`** — `smooth` \| `jagged`. Jagged + low radius → robot/edgy outline. Defaults: speech smooth, glitch/shatter jagged.
+- **`cornerRadius`** — `0..1` × `min(body.w, body.h) / 2`. `0` = sharp rectangle, `1` = full pill. Default for `speech`: `1`.
+- **`edge`** — `smooth` \| `jagged`. Jagged + low radius → angular outline. Default for `speech`: `smooth`.
+- **`notchTop`** — boolean; lightning notch on the top edge (`speech` only; ref shapes ignore). Default `false`.
+- **`fill` / `stroke` / `strokeWidth`** — optional appearance overrides; default from `PROFILE.shapes.speech`.
 - **`lobes`** — additional `{ placement, content }` lobes fused with the primary body into one chained silhouette (open necks, no crossbars; one tail).
 
 Geometry is a single closed path with an **open tail join** (no crossbar cutting the tip). Ref-sheet shapes map fixed templates; they ignore radius/edge for the silhouette.

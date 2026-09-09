@@ -24,7 +24,7 @@ export interface RoundedBalloonInput {
   /** 0..1 of min(w,h)/2 */
   cornerRadius: number;
   edge: EdgeStyle;
-  /** Lightning notch punched into the top edge (shatter). */
+  /** Lightning notch punched into the top edge (speech authoring knob). */
   notchTop?: boolean;
 }
 
@@ -636,13 +636,11 @@ export function contentInsetsForRoundedBody(
   return { padX: R(ix), padY: R(iy) };
 }
 
-export function defaultCornerRadius(shapeId: string): number {
-  // glitch / shatter default sharp; speech + ref-sheet silhouettes default pill.
-  if (shapeId === "glitch" || shapeId === "shatter") return 0;
+export function defaultCornerRadius(_shapeId: string): number {
+  // speech (+ any future rounded-rect) defaults to full pill; ref shapes ignore.
   return 1;
 }
 
-export function defaultEdge(shapeId: string): EdgeStyle {
-  if (shapeId === "glitch" || shapeId === "shatter") return "jagged";
+export function defaultEdge(_shapeId: string): EdgeStyle {
   return "smooth";
 }

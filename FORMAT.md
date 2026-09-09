@@ -145,7 +145,7 @@ Use hard zones for faces, logos, critical art. Soft zones flag review without fa
   "kind": "silent",
   "id": "P022-04-S01",
   "panelId": "P022-04",
-  "speakerId": "glitch"
+  "speakerId": "rec"
 }
 ```
 
@@ -155,7 +155,7 @@ No geometry, text, or SVG. Marks an intentional absence so proofing can distingu
 
 Required: `kind`, `id`, `panelId`, `speakerId`, `shapeId`, `placement`, `content`.
 
-Optional: `tail`, `localeOverrides`, `cornerRadius`, `edge`, `lobes`.
+Optional: `tail`, `localeOverrides`, `cornerRadius`, `edge`, `notchTop`, `fill`, `stroke`, `strokeWidth`, `lobes`.
 
 #### Placement
 
@@ -219,7 +219,7 @@ English geometry is never reused as a fixed Russian container. If no override ex
 
 ## 7. Styling knobs
 
-These apply to the **rounded-rect family** (`speech`, `glitch`, `shatter`). Ref-sheet shapes ignore `cornerRadius` / `edge` for the silhouette (they map a fixed template path).
+These apply to the **rounded-rect family** (public shape id `speech`). Ref-sheet shapes ignore `cornerRadius` / `edge` / `notchTop` for the silhouette (they map a fixed template path). Appearance overrides on ref shapes are ignored by the silhouette builder (ref fills still come from the profile).
 
 ### `cornerRadius` — `0..1`
 
@@ -231,22 +231,24 @@ Corner roundness as a fraction of `min(body.w, body.h) / 2`:
 | `~0.45` | Soft rounded rect |
 | `1` | Full pill / stadium |
 
-Defaults when omitted:
-
-- `speech` → `1`
-- `glitch` / `shatter` → `0`
-- ref shapes → n/a (template)
-
-**Glitch reuse:** the same `speech` geometry family with `cornerRadius: 0` (and optionally `edge: "jagged"`) reads as robot/playback without a separate silhouette. Dedicated `glitch` / `shatter` ids still exist (different fill/stroke defaults; breaking adds a lightning top notch).
+Default when omitted: `speech` → `1`. Ref shapes → n/a (template).
 
 ### `edge` — `smooth` \| `jagged`
 
 | Value | Outline |
 | --- | --- |
 | `smooth` | Clean comic curves (default for speech) |
-| `jagged` | Angular / vibrating outline (default for glitch) |
+| `jagged` | Angular / jagged outline |
 
 Jagged also clamps corner radius so edges stay edgy even if radius is mid-range.
+
+### `notchTop` — boolean
+
+When `true`, punches a lightning notch into the **top** edge of a single-body `speech` balloon. Default `false`. Meaningful for `speech` only; ref shapes ignore it (no error). Multi-lobe speech chains also ignore the notch (path builder is single-body only).
+
+### `fill` / `stroke` / `strokeWidth`
+
+Optional appearance overrides on the balloon item. When omitted, use `PROFILE.shapes.speech` defaults (cream fill `#fffaf0`, stroke `#241f1a`, width `10`). Former mint / pinkish looks are authored via these overrides (see recipes below).
 
 ### `lobes` — chained multi-bubble
 
@@ -267,21 +269,30 @@ For **chain**, lobe lettering can sit in template content bands on the fitted fr
 
 ---
 
-> **Shape ID rename (0.1.0):** public ids are now generic names (`speech`, `glitch`, `shatter`, `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect`). Old ids (`human-01`, `glitch-01`, `glitch-breaking-01`, `ref-01`…`ref-09`) are not accepted.
+> **History:** early drafts used character/theme shape ids (`human-01`, `glitch-01`, `glitch-breaking-01`, then short `glitch` / `shatter`). Those shapeIds were **removed** in favor of one public rounded-rect shape `speech` plus authoring knobs (`cornerRadius`, `edge`, `notchTop`, optional `fill` / `stroke` / `strokeWidth`). Old ids are not accepted.
 
 ## 8. Shape catalog
 
 Registered `shapeId` values (schema enum). All are implemented in profile `rift-city-proof` @ `0.1.0`.
 
-### Rounded-rect family (parameterized path)
+### Rounded-rect family (one public shape)
 
 | `shapeId` | Defaults | Notes |
 | --- | --- | --- |
-| `speech` | radius `1`, `smooth`, fill `#fffaf0` | Soft comic speech |
-| `glitch` | radius `0`, `jagged`, mint fill | Found-recording / robot |
-| `shatter` | radius `0`, `jagged`, pinkish fill | Same + lightning notch on top edge |
+| `speech` | `cornerRadius` `1`, `edge` `smooth`, `notchTop` `false`, cream fill | Soft comic speech; all looks via knobs |
 
-All three call the shared rounded-rect builder (`cornerRadius`, `edge`, `lobes`, open tail).
+`speech` calls the shared rounded-rect builder (`cornerRadius`, `edge`, `notchTop`, `lobes`, open tail, optional appearance overrides).
+
+#### Look recipes (authoring knobs, not separate shapeIds)
+
+| Look | Knobs |
+| --- | --- |
+| Soft pill | `speech` (defaults) |
+| Sharp box | `speech` + `cornerRadius: 0` |
+| Jagged / angular | `speech` + `cornerRadius: 0` + `edge: "jagged"` (+ optional mint `fill` `#e7f2e9` / `stroke` `#142018`) |
+| Notched / interrupted | same as jagged + `notchTop: true` (+ optional pinkish `fill` `#f3e6e6` / `stroke` `#2a1414`) |
+
+Fixtures: `fixtures/speech-jagged.json`, `fixtures/speech-notch.json`. Gallery: `scripts/gen-speech-styles.mjs` → Soft / Square / Jagged.
 
 ### Ref-sheet family (hand-traced templates)
 
@@ -316,7 +327,7 @@ Pipeline (simplified):
 
 Authored `lines` are never re-wrapped, but each line must still fit the usable width.
 
-Profile knobs (per shape) include padding (absolute and/or ratio of min dimension), `usableWidthFactor`, `minFontSize` / `maxFontSize`, `maxLines`, `maxExpandFactor`. Ref shapes allow larger expand (text drives size); human/glitch use smaller expand steps then type shrink.
+Profile knobs (per shape) include padding (absolute and/or ratio of min dimension), `usableWidthFactor`, `minFontSize` / `maxFontSize`, `maxLines`, `maxExpandFactor`. Ref shapes allow larger expand (text drives size); speech uses smaller expand steps then type shrink.
 
 Failure after exhausting expand + min size → `TEXT_OVERFLOW`, often with a suggested wider `localeOverrides.*.placement.width`.
 
@@ -422,8 +433,8 @@ Use extensionless imports. `renderPage` is pure relative to compiled profiles an
 ### Bilingual page-022 (`examples/page-022.json`)
 
 - One `speech` balloon for Lex, bilingual `lines`, Russian `localeOverrides` for wider placement + `tailBend`.
-- Hard exclusions on Lex face and Glitch lens.
-- A `silent` item for Glitch (intentional no balloon).
+- Hard exclusions on Lex face and the recording-device lens.
+- A `silent` item for the recording character (intentional no balloon).
 
 ```sh
 bun run wubble -- validate examples/page-022.json
@@ -453,7 +464,7 @@ For the ref-sheet chain silhouette use `shapeId: "chain"` and put secondary dial
 
 Text expands the frame; the cloud silhouette maps into it. Do not set `cornerRadius` / `edge` expecting to reshape a ref path.
 
-### Corner-radius robot (`fixtures/corners-grid.json`)
+### Corner / edge variants (`fixtures/corners-grid.json`)
 
 Same `speech` family, four variants:
 
@@ -462,9 +473,9 @@ Same `speech` family, four variants:
 | radius 0 | `cornerRadius: 0`, `smooth` | Sharp rect |
 | mid | `0.45`, `smooth` | Soft rounded |
 | radius 1 | `1`, `smooth` | Pill |
-| robot edgy | `0`, `jagged` | Glitch-style square |
+| jagged | `0`, `jagged` | Angular square |
 
-Gallery strip of the reuse pattern: `demo-out/gallery/glitch-reuse-*.png` (human soft · square · jagged).
+Gallery strip: `demo-out/gallery/speech-styles-*.png` (Soft · Square · Jagged) via `scripts/gen-speech-styles.mjs`.
 
 ---
 
@@ -474,7 +485,7 @@ Gallery strip of the reuse pattern: `demo-out/gallery/glitch-reuse-*.png` (human
 
 - Choose registered `shapeId` values from the catalog
 - Propose `placement` / lobe placements and `tail` (subject, anchor, attachment, bend)
-- Set `cornerRadius`, `edge`, and `lobes` where the shape family supports them
+- Set `cornerRadius`, `edge`, `notchTop`, optional `fill` / `stroke` / `strokeWidth`, and `lobes` where the shape family supports them
 - Supply localized `text` or `lines` and `localeOverrides`
 - Revise only permitted fields in response to diagnostics / suggestions
 - Add or adjust soft/hard exclusion proposals for human review
@@ -483,7 +494,7 @@ Gallery strip of the reuse pattern: `demo-out/gallery/glitch-reuse-*.png` (human
 
 - Emit raw SVG, path `d` strings, or arbitrary filters/transforms
 - Invent shape IDs outside the schema enum (use catalog names only, e.g. `cloud`, `speech`)
-- Change fonts, digests, fill/stroke/padding (those live in the profile)
+- Change fonts, digests, or profile padding (appearance may use optional per-balloon `fill` / `stroke` / `strokeWidth` only)
 - Disable hard validation gates or invent diagnostic codes
 - Reuse English fitted bounds as a fixed Russian container
 - Rewrite renderer code or “fix” overflow by pasting geometry

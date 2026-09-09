@@ -1,6 +1,7 @@
 /**
- * speech — soft comic balloon via parameterized rounded-rect + open tail.
- * Default cornerRadius=1 (pill). Respects author cornerRadius / edge / lobes.
+ * speech — parametric rounded-rect / pill balloon + open tail.
+ * Defaults: cornerRadius=1, edge=smooth, notchTop=false.
+ * Appearance (fill/stroke/strokeWidth) from PROFILE unless overridden.
  */
 
 import { PROFILE } from "../profile";
@@ -15,6 +16,11 @@ export interface SpeechInput {
   attachment: "top" | "right" | "bottom" | "left" | "auto";
   cornerRadius: number;
   edge: EdgeStyle;
+  /** Lightning notch on top edge (ignored for multi-lobe chains by the path builder). */
+  notchTop?: boolean;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
 }
 
 export function buildSpeech(input: SpeechInput): ShapeGeometry {
@@ -27,11 +33,12 @@ export function buildSpeech(input: SpeechInput): ShapeGeometry {
     attachment: input.attachment,
     cornerRadius: input.cornerRadius,
     edge: input.edge,
+    notchTop: Boolean(input.notchTop),
   });
   return {
     path,
-    fill: shape.fill,
-    stroke: shape.stroke,
-    strokeWidth: shape.strokeWidth,
+    fill: input.fill ?? shape.fill,
+    stroke: input.stroke ?? shape.stroke,
+    strokeWidth: input.strokeWidth ?? shape.strokeWidth,
   };
 }

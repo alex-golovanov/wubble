@@ -91,8 +91,6 @@ export interface LocaleOverride {
 
 export type ShapeId =
   | "speech"
-  | "glitch"
-  | "shatter"
   | "chain"
   | "cloud"
   | "needle"
@@ -103,7 +101,7 @@ export type ShapeId =
   | "thought"
   | "rect";
 
-/** Outline treatment — smooth comic stroke vs angular/robot edgy. */
+/** Outline treatment — smooth comic stroke vs angular/jagged outline. */
 export type EdgeStyle = "smooth" | "jagged";
 
 /**
@@ -125,11 +123,22 @@ export interface BalloonItem {
   /**
    * Corner roundness as 0..1 × min(body.w, body.h) / 2.
    * 0 = sharp rectangle, 1 = full pill/stadium.
-   * Default: speech → 1, glitch/shatter → 0.
+   * Default for `speech`: 1. Ref shapes ignore.
    */
   cornerRadius?: number;
-  /** Outline treatment. Default: speech → smooth, glitch/shatter → jagged. */
+  /** Outline treatment. Default for `speech`: smooth. Ref shapes ignore. */
   edge?: EdgeStyle;
+  /**
+   * When true, punch a lightning notch into the top edge (speech only).
+   * Ref shapes ignore. Default: false.
+   */
+  notchTop?: boolean;
+  /** Optional fill override; default from PROFILE.shapes.speech. */
+  fill?: string;
+  /** Optional stroke override; default from PROFILE.shapes.speech. */
+  stroke?: string;
+  /** Optional stroke width override; default from PROFILE.shapes.speech. */
+  strokeWidth?: number;
   /**
    * Additional lobes fused with `placement` into one chained silhouette
    * (open necks, single outline). Reading order typically top→bottom.

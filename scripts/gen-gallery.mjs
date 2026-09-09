@@ -96,8 +96,8 @@ const jobs = [
   ["speech-top", "fixtures/speech-top.json", "en"],
   ["speech-left", "fixtures/speech-left.json", "en"],
   ["speech-right", "fixtures/speech-right.json", "en"],
-  ["glitch", "fixtures/glitch.json", "en"],
-  ["shatter", "fixtures/shatter.json", "en"],
+  ["speech-jagged", "fixtures/speech-jagged.json", "en"],
+  ["speech-notch", "fixtures/speech-notch.json", "en"],
   ["multi-balloon", "fixtures/multi-balloon.json", "en"],
 ];
 

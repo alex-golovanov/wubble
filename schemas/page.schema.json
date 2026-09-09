@@ -300,8 +300,6 @@
         "shapeId": {
           "enum": [
             "speech",
-            "glitch",
-            "shatter",
             "chain",
             "cloud",
             "needle",
@@ -352,6 +350,23 @@
             "$ref": "#/$defs/balloonLobe"
           },
           "description": "Additional lobes chained with placement into one open silhouette."
+        },
+        "notchTop": {
+          "type": "boolean",
+          "description": "When true, lightning notch on top edge. Meaningful for speech only; ref shapes ignore."
+        },
+        "fill": {
+          "type": "string",
+          "description": "Optional fill override. Default from PROFILE.shapes.speech (cream)."
+        },
+        "stroke": {
+          "type": "string",
+          "description": "Optional stroke override. Default from PROFILE.shapes.speech."
+        },
+        "strokeWidth": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional stroke width override. Default from PROFILE.shapes.speech."
         }
       }
     },
@@ -385,7 +400,7 @@
         "smooth",
         "jagged"
       ],
-      "description": "Outline treatment. smooth = comic curves; jagged = angular/robot edgy."
+      "description": "Outline treatment. smooth = comic curves; jagged = angular/jagged outline."
     },
     "cornerRadius": {
       "type": "number",

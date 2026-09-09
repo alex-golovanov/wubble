@@ -7,10 +7,10 @@
 
 
 > **Living format docs:** Implementation has extended beyond this initial proof contract.
-> Registered shapes now include `speech`, `glitch`, `shatter`, and
+> Registered shapes now include `speech` and
 > `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect`;
-> balloons accept `cornerRadius`, `edge`, and `lobes`; layout is text-driven
-> (measure → expand body with padding → map silhouette). Treat
+> balloons accept `cornerRadius`, `edge`, `notchTop`, optional appearance overrides, and `lobes`; layout is text-driven
+> (measure → expand body with padding → map silhouette). Former `glitch` / `shatter` shapeIds were removed in favor of `speech` knobs. Treat
 > [`FORMAT.md`](FORMAT.md) and [`schemas/page.schema.json`](schemas/page.schema.json)
 > as the living format documentation. This SPEC remains the historical product /
 > determinism contract — do not treat “Later registered components” below as unimplemented.
@@ -195,7 +195,7 @@ Initial human speech-balloon candidate (now the rounded-rect family default):
 - soft pill body by default (`cornerRadius` 1, `edge` smooth);
 - warm paper fill and dark outline from the render profile;
 - one tapered tail with an **open join** (single closed silhouette, no crossbar);
-- optional `cornerRadius` / `edge` / `lobes` (same builder as `glitch` / `shatter`);
+- optional `cornerRadius` / `edge` / `notchTop` / appearance overrides / `lobes`;
 - no random wobble;
 - proportions derived deterministically from fitted bounds.
 
@@ -203,12 +203,11 @@ The candidate source is [`references/speech.svg`](references/speech.svg). It is 
 
 ### Later registered components (now implemented)
 
-- `glitch` — found-recording / robot balloon (rounded-rect family; default `cornerRadius` 0, `edge` jagged);
-- `shatter` — interrupted playback (same family + lightning top notch);
+- Rounded-rect looks formerly split as `glitch` / `shatter` shapeIds are now **`speech` knobs** (`cornerRadius`, `edge`, `notchTop`, optional `fill` / `stroke` / `strokeWidth`);
 - `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` — hand-sheet silhouettes;
 - `silent` — manifest-only instruction, never visible.
 
-Geometry for these ids is implemented in the current package. Optional knobs `cornerRadius`, `edge`, and `lobes` apply to the rounded-rect family; ref shapes map fixed templates (see [`FORMAT.md`](FORMAT.md)).
+Geometry for these ids is implemented in the current package. Optional knobs apply to the rounded-rect family (`speech`); ref shapes map fixed templates (see [`FORMAT.md`](FORMAT.md)).
 
 ## 8. Text and typography
 
@@ -430,7 +429,7 @@ Passing these criteria proves the architecture, not the complete Rift City lette
 
 ### Milestone D — Rift City channel grammar
 
-- `glitch` and `shatter` are implemented (plus ref-sheet shapes and styling knobs; see FORMAT.md);
+- parametric `speech` knobs + ref-sheet shapes are implemented (see FORMAT.md);
 - continue source labels and language-specific interruption behavior as editorial needs grow;
 - validate the `silent` instruction as an intentional absence.
 
@@ -445,7 +444,7 @@ These are real later decisions, not hidden implementation assumptions:
 - open-source license;
 - selected body typeface and its redistribution terms;
 - exact minimum print size and maximum line count;
-- further Glitch / channel grammar beyond the implemented `glitch` / `shatter` and knob reuse;
+- further channel grammar beyond parametric `speech` knobs and ref-sheet shapes;
 - whether release SVG keeps text live or converts glyphs to paths;
 - whether PDF export belongs in this package or a publishing adapter.
 

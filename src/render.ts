@@ -126,6 +126,10 @@ function renderBalloonGroup(
     attachment,
     cornerRadius: item.cornerRadius,
     edge: item.edge,
+    notchTop: item.notchTop,
+    fill: item.fill,
+    stroke: item.stroke,
+    strokeWidth: item.strokeWidth,
   });
 
   const parts: string[] = [];

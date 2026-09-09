@@ -72,7 +72,7 @@
       "id": "P022-02-B01",
       "panelId": "P022-02",
       "speakerId": "lex",
-      "shapeId": "glitch",
+      "shapeId": "speech",
       "placement": {
         "x": 930,
         "y": 1110,
@@ -96,10 +96,15 @@
         },
         "ru": {
           "lines": [
-            "\u0428\u0443\u043c"
+            "Шум"
           ]
         }
-      }
+      },
+      "cornerRadius": 0,
+      "edge": "jagged",
+      "fill": "#e7f2e9",
+      "stroke": "#142018",
+      "strokeWidth": 8
     },
     {
       "kind": "silent",

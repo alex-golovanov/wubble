@@ -159,10 +159,10 @@ async function main() {
     console.log("wrote corners-chain-three.png");
   }
 
-  // 4) Refresh human + glitch gallery samples
+  // 4) Refresh speech + jagged gallery samples
   for (const [name, file, locale] of [
     ["corners-speech", "examples/page-022.json", "en"],
-    ["corners-glitch", "fixtures/glitch.json", "en"],
+    ["corners-speech-jagged", "fixtures/speech-jagged.json", "en"],
   ]) {
     const m = load(file);
     const r = renderPage(m, { locale, profileId: PROFILE_ID });

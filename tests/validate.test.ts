@@ -49,20 +49,32 @@ describe("validatePage", () => {
     );
   });
 
-  test("glitch is implemented — no UNKNOWN_SHAPE", () => {
-    expect(isShapeImplemented("glitch")).toBe(true);
-    const m = load("fixtures/unknown-shape.json");
+  test("speech jagged fixture validates — no UNKNOWN_SHAPE", () => {
+    expect(isShapeImplemented("speech")).toBe(true);
+    expect(isShapeImplemented("glitch")).toBe(false);
+    expect(isShapeImplemented("shatter")).toBe(false);
+    const m = load("fixtures/speech-jagged.json");
     const r = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(r.diagnostics.some((d) => d.code === "UNKNOWN_SHAPE")).toBe(false);
     expect(r.valid).toBe(true);
   });
 
-  test("shatter is implemented", () => {
-    expect(isShapeImplemented("shatter")).toBe(true);
-    const m = load("fixtures/shatter.json");
+  test("speech notch fixture validates", () => {
+    const m = load("fixtures/speech-notch.json");
     const r = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(r.valid).toBe(true);
     expect(r.diagnostics.some((d) => d.code === "UNKNOWN_SHAPE")).toBe(false);
+  });
+
+  test("UNKNOWN_SHAPE gate rejects removed and bogus ids", () => {
+    expect(isShapeImplemented("glitch")).toBe(false);
+    expect(isShapeImplemented("shatter")).toBe(false);
+    expect(isShapeImplemented("not-a-real-shape")).toBe(false);
+    // Schema enum rejects unknown ids as SCHEMA_INVALID; helper still gates.
+    const speech = load("fixtures/unknown-shape.json");
+    const r = validatePage(speech, { locale: "en", profileId: PROFILE_ID });
+    expect(r.diagnostics.some((d) => d.code === "UNKNOWN_SHAPE")).toBe(false);
+    expect(r.valid).toBe(true);
   });
 
   test("UNKNOWN_ANCHOR", () => {
