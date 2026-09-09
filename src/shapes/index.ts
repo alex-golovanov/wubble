@@ -1,7 +1,7 @@
 import type { Bounds, EdgeStyle, Point, ShapeGeometry, ShapeId } from "../types";
-import { buildHuman01 } from "./human-01";
-import { buildGlitch01 } from "./glitch-01";
-import { buildGlitchBreaking01 } from "./glitch-breaking-01";
+import { buildSpeech } from "./speech";
+import { buildGlitch } from "./glitch";
+import { buildShatter } from "./shatter";
 import { buildRefSheetShape, isRefShapeId } from "./ref-sheet";
 import { defaultCornerRadius, defaultEdge } from "./rounded-rect";
 
@@ -46,12 +46,12 @@ export function buildShape(input: ShapeBuildInput): ShapeGeometry {
     edge: style.edge,
   };
   switch (input.shapeId) {
-    case "human-01":
-      return buildHuman01(common);
-    case "glitch-01":
-      return buildGlitch01(common);
-    case "glitch-breaking-01":
-      return buildGlitchBreaking01(common);
+    case "speech":
+      return buildSpeech(common);
+    case "glitch":
+      return buildGlitch(common);
+    case "shatter":
+      return buildShatter(common);
     default: {
       const _exhaustive: never = input.shapeId;
       return _exhaustive;

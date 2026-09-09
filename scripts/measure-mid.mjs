@@ -1,7 +1,7 @@
-import { buildHuman01 } from "../src/shapes/human-01";
+import { buildSpeech } from "../src/shapes/speech";
 const body = { x: 930, y: 1110, width: 560, height: 300 };
 const tip = { x: 1225, y: 1685 };
-const g = buildHuman01({ body, tip, bend: { x: 1260, y: 1490 }, attachment: "bottom" });
+const g = buildSpeech({ body, tip, bend: { x: 1260, y: 1490 }, attachment: "bottom", cornerRadius: 1, edge: "smooth" });
 const re = /C\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)/g;
 const cubics = [...g.path.matchAll(re)];
 const dive = cubics[5], ret = cubics[6];

@@ -23,7 +23,7 @@
       "id": "G01-B01",
       "panelId": "G01-P1",
       "speakerId": "rec",
-      "shapeId": "glitch-01",
+      "shapeId": "glitch",
       "placement": { "x": 320, "y": 180, "width": 520, "height": 260 },
       "tail": {
         "subjectId": "rec",

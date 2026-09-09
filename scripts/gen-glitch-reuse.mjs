@@ -29,7 +29,7 @@ function baseManifest(pageId, itemExtra, lines, placement = { x: 460, y: 340, wi
         id: `${pageId}-B01`,
         panelId: "P1",
         speakerId: "who",
-        shapeId: "human-01",
+        shapeId: "speech",
         placement,
         tail: { subjectId: "who", anchor: "mouth", attachment: "bottom" },
         content: { en: { lines } },

@@ -46,14 +46,14 @@ export const PROFILE = {
   id: PROFILE_ID,
   version: PROFILE_VERSION,
   shapes: {
-    "human-01": {
+    "speech": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 10,
       ...sharedFit,
     },
-    "glitch-01": {
+    "glitch": {
       implemented: true as const,
       fill: "#e7f2e9",
       stroke: "#142018",
@@ -62,7 +62,7 @@ export const PROFILE = {
       paddingX: 40,
       paddingY: 32,
     },
-    "glitch-breaking-01": {
+    "shatter": {
       implemented: true as const,
       fill: "#f3e6e6",
       stroke: "#2a1414",
@@ -71,7 +71,7 @@ export const PROFILE = {
       paddingX: 40,
       paddingY: 32,
     },
-    "ref-01": {
+    "chain": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -81,7 +81,7 @@ export const PROFILE = {
       usableWidthFactor: 0.96,
       maxFontSize: 64,
     },
-    "ref-02": {
+    "cloud": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -91,7 +91,7 @@ export const PROFILE = {
       usableWidthFactor: 0.90,
       maxFontSize: 58,
     },
-    "ref-03": {
+    "needle": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -101,7 +101,7 @@ export const PROFILE = {
       usableWidthFactor: 0.92,
       maxFontSize: 62,
     },
-    "ref-04": {
+    "round": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -111,7 +111,7 @@ export const PROFILE = {
       usableWidthFactor: 0.92,
       maxFontSize: 64,
     },
-    "ref-05": {
+    "hook": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -121,7 +121,7 @@ export const PROFILE = {
       usableWidthFactor: 0.94,
       maxFontSize: 62,
     },
-    "ref-06": {
+    "lightning": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -131,7 +131,7 @@ export const PROFILE = {
       usableWidthFactor: 0.92,
       maxFontSize: 58,
     },
-    "ref-07": {
+    "fluffy": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -141,7 +141,7 @@ export const PROFILE = {
       usableWidthFactor: 0.86,
       maxFontSize: 56,
     },
-    "ref-08": {
+    "thought": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -151,7 +151,7 @@ export const PROFILE = {
       usableWidthFactor: 0.92,
       maxFontSize: 62,
     },
-    "ref-09": {
+    "rect": {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -172,7 +172,7 @@ export const PROFILE = {
   numberPrecision: 2,
 } as const;
 
-export type ShapeProfile = (typeof PROFILE.shapes)["human-01"];
+export type ShapeProfile = (typeof PROFILE.shapes)["speech"];
 
 let cachedFontBytes: Buffer | null = null;
 let cachedFontBase64: string | null = null;

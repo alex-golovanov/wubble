@@ -26,7 +26,7 @@ describe("ref-sheet templates", () => {
       const g = buildRefSheetShape(id, body);
       expect(g.path).toMatch(/Z/);
       expect(g.path.startsWith("M ")).toBe(true);
-      if (id === "ref-08") {
+      if (id === "thought") {
         expect((g.path.match(/Z/g) ?? []).length).toBeGreaterThanOrEqual(3);
       } else {
         expect((g.path.match(/Z/g) ?? []).length).toBe(1);
@@ -36,13 +36,13 @@ describe("ref-sheet templates", () => {
 
   test("buildShape routes ref ids to templates", () => {
     const g = buildShape({
-      shapeId: "ref-05",
+      shapeId: "hook",
       body: { x: 0, y: 0, width: 500, height: 400 },
       tip: { x: 200, y: 450 },
       bend: null,
       attachment: "bottom",
     });
-    const direct = buildRefSheetShape("ref-05", {
+    const direct = buildRefSheetShape("hook", {
       x: 0,
       y: 0,
       width: 500,
@@ -51,9 +51,9 @@ describe("ref-sheet templates", () => {
     expect(g.path).toEqual(direct.path);
   });
 
-  test("cream hook template exists and is distinct from ref-05", () => {
+  test("cream hook template exists and is distinct from hook", () => {
     const cream = REF_TEMPLATES["ref-cream-hook"].path;
-    const hook = REF_TEMPLATES["ref-05"].path;
+    const hook = REF_TEMPLATES["hook"].path;
     expect(cream).not.toEqual(hook);
     expect(cream).toContain("Z");
     const mapped = mapTemplatePath(cream, [0, 0, 1000, 1000], {

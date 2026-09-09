@@ -28,7 +28,7 @@
       "id": "M-B01",
       "panelId": "M-P1",
       "speakerId": "a",
-      "shapeId": "human-01",
+      "shapeId": "speech",
       "placement": { "x": 120, "y": 200, "width": 480, "height": 260 },
       "tail": {
         "subjectId": "a",
@@ -46,7 +46,7 @@
       "id": "M-B02",
       "panelId": "M-P1",
       "speakerId": "b",
-      "shapeId": "human-01",
+      "shapeId": "speech",
       "placement": { "x": 980, "y": 220, "width": 480, "height": 260 },
       "tail": {
         "subjectId": "b",

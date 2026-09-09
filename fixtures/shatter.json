@@ -23,7 +23,7 @@
       "id": "GB01-B01",
       "panelId": "GB01-P1",
       "speakerId": "rec",
-      "shapeId": "glitch-breaking-01",
+      "shapeId": "shatter",
       "placement": { "x": 300, "y": 160, "width": 560, "height": 280 },
       "tail": {
         "subjectId": "rec",

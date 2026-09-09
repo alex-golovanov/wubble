@@ -166,7 +166,7 @@ export function fitBalloonText(
   content: LocaleContent,
   placement: Bounds,
   itemId: string,
-  shapeId: ShapeId = "human-01",
+  shapeId: ShapeId = "speech",
   style?: FitStyle,
 ): LayoutResult {
   const shape = shapeProfile(shapeId);

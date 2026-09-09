@@ -15,7 +15,7 @@
       "id": "H-bottom",
       "panelId": "P1",
       "speakerId": "spk",
-      "shapeId": "human-01",
+      "shapeId": "speech",
       "placement": {"x":280,"y":160,"width":560,"height":280},
       "tail": {
         "subjectId": "spk",

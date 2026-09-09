@@ -1,11 +1,11 @@
-import { buildHuman01 } from "../src/shapes/human-01";
+import { buildSpeech } from "../src/shapes/speech";
 const cases = [
   { name: "multi-L", body: { x: 120, y: 200, width: 480, height: 260 }, tip: { x: 280, y: 920 }, bend: { x: 260, y: 560 } },
   { name: "page022", body: { x: 930, y: 1110, width: 560, height: 300 }, tip: { x: 1225, y: 1685 }, bend: { x: 1260, y: 1490 } },
   { name: "close", body: { x: 280, y: 160, width: 560, height: 280 }, tip: { x: 600, y: 520 }, bend: null },
 ];
 for (const c of cases) {
-  const g = buildHuman01({ body: c.body, tip: c.tip, bend: c.bend, attachment: "bottom" });
+  const g = buildSpeech({ body: c.body, tip: c.tip, bend: c.bend, attachment: "bottom", cornerRadius: 1, edge: "smooth" });
   const re = /C\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)/g;
   const cubics = [...g.path.matchAll(re)];
   const dive = cubics[5], ret = cubics[6];

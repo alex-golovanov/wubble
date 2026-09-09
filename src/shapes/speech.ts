@@ -1,13 +1,13 @@
 /**
- * glitch-breaking-01 — interrupted playback: jagged rect + lightning top notch.
- * Open tail join via rounded-rect builder (cornerRadius 0 / jagged + notchTop).
+ * speech — soft comic balloon via parameterized rounded-rect + open tail.
+ * Default cornerRadius=1 (pill). Respects author cornerRadius / edge / lobes.
  */
 
 import { PROFILE } from "../profile";
 import type { Bounds, EdgeStyle, Point, ShapeGeometry } from "../types";
 import { buildRoundedBalloonPath } from "./rounded-rect";
 
-export interface GlitchBreakingInput {
+export interface SpeechInput {
   body: Bounds;
   lobeBodies?: Bounds[];
   tip: Point | null;
@@ -17,8 +17,8 @@ export interface GlitchBreakingInput {
   edge: EdgeStyle;
 }
 
-export function buildGlitchBreaking01(input: GlitchBreakingInput): ShapeGeometry {
-  const shape = PROFILE.shapes["glitch-breaking-01"];
+export function buildSpeech(input: SpeechInput): ShapeGeometry {
+  const shape = PROFILE.shapes["speech"];
   const bodies = [input.body, ...(input.lobeBodies ?? [])];
   const path = buildRoundedBalloonPath({
     bodies,
@@ -27,7 +27,6 @@ export function buildGlitchBreaking01(input: GlitchBreakingInput): ShapeGeometry
     attachment: input.attachment,
     cornerRadius: input.cornerRadius,
     edge: input.edge,
-    notchTop: bodies.length === 1,
   });
   return {
     path,

@@ -90,18 +90,18 @@ export interface LocaleOverride {
 }
 
 export type ShapeId =
-  | "human-01"
-  | "glitch-01"
-  | "glitch-breaking-01"
-  | "ref-01"
-  | "ref-02"
-  | "ref-03"
-  | "ref-04"
-  | "ref-05"
-  | "ref-06"
-  | "ref-07"
-  | "ref-08"
-  | "ref-09";
+  | "speech"
+  | "glitch"
+  | "shatter"
+  | "chain"
+  | "cloud"
+  | "needle"
+  | "round"
+  | "hook"
+  | "lightning"
+  | "fluffy"
+  | "thought"
+  | "rect";
 
 /** Outline treatment — smooth comic stroke vs angular/robot edgy. */
 export type EdgeStyle = "smooth" | "jagged";
@@ -125,10 +125,10 @@ export interface BalloonItem {
   /**
    * Corner roundness as 0..1 × min(body.w, body.h) / 2.
    * 0 = sharp rectangle, 1 = full pill/stadium.
-   * Default: human-01 → 1, glitch-* → 0.
+   * Default: speech → 1, glitch/shatter → 0.
    */
   cornerRadius?: number;
-  /** Outline treatment. Default: human-01 → smooth, glitch-* → jagged. */
+  /** Outline treatment. Default: speech → smooth, glitch/shatter → jagged. */
   edge?: EdgeStyle;
   /**
    * Additional lobes fused with `placement` into one chained silhouette

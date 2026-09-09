@@ -1,5 +1,5 @@
 /**
- * Filled ref-sheet gallery: cool phrases lettered into ref-01..09.
+ * Filled ref-sheet gallery: cool phrases lettered into chain..09.
  * Text drives balloon size (layout expands with ratio padding + content bands);
  * silhouette templates keep their native aspect.
  */
@@ -18,40 +18,40 @@ const BG = "#f3efe6";
 const PAGE = 2200;
 
 const copy = {
-  "ref-01": {
+  "chain": {
     mode: "lobes",
     top: ["We keep moving."],
     bottom: ["No looking back."],
   },
-  "ref-02": {
+  "cloud": {
     mode: "lines",
     lines: ["Plot twist:", "I'm the weather."],
   },
-  "ref-03": {
+  "needle": {
     mode: "lines",
     lines: ["Long story", "short—", "don't."],
   },
-  "ref-04": {
+  "round": {
     mode: "lines",
     lines: ["Trust the", "glitch."],
   },
-  "ref-05": {
+  "hook": {
     mode: "lines",
     lines: ["Soft voice.", "Hard truth."],
   },
-  "ref-06": {
+  "lightning": {
     mode: "lines",
     lines: ["SYSTEM:", "feelings", "overloaded"],
   },
-  "ref-07": {
+  "fluffy": {
     mode: "lines",
     lines: ["Chaos, but", "make it cute."],
   },
-  "ref-08": {
+  "thought": {
     mode: "lines",
     lines: ["…what if we", "just win?"],
   },
-  "ref-09": {
+  "rect": {
     mode: "lines",
     lines: ["Ship it.", "Sleep later."],
   },
@@ -70,10 +70,10 @@ function seedPlacement(id) {
   const aspect = templateAspect(id);
   // Modest seed — layout expands from text + content-band padding at maxFont.
   let height = 420;
-  if (id === "ref-01") height = 520; // chain needs both lobes + tail
-  if (id === "ref-03" || id === "ref-06") height = 480; // long tails
-  if (id === "ref-04") height = 400;
-  if (id === "ref-09") height = 440;
+  if (id === "chain") height = 520; // chain needs both lobes + tail
+  if (id === "needle" || id === "lightning") height = 480; // long tails
+  if (id === "round") height = 400;
+  if (id === "rect") height = 440;
   let width = Math.round(height * aspect);
   if (width > 720) {
     width = 720;
@@ -89,7 +89,7 @@ function tipFor(id, body) {
   const tipX =
     body.x +
     body.width *
-      (id === "ref-06" ? 0.28 : id === "ref-05" ? 0.38 : id === "ref-03" ? 0.5 : 0.55);
+      (id === "lightning" ? 0.28 : id === "hook" ? 0.38 : id === "needle" ? 0.5 : 0.55);
   return { tipX, tipY };
 }
 

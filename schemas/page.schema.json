@@ -299,18 +299,18 @@
         },
         "shapeId": {
           "enum": [
-            "human-01",
-            "glitch-01",
-            "glitch-breaking-01",
-            "ref-01",
-            "ref-02",
-            "ref-03",
-            "ref-04",
-            "ref-05",
-            "ref-06",
-            "ref-07",
-            "ref-08",
-            "ref-09"
+            "speech",
+            "glitch",
+            "shatter",
+            "chain",
+            "cloud",
+            "needle",
+            "round",
+            "hook",
+            "lightning",
+            "fluffy",
+            "thought",
+            "rect"
           ]
         },
         "placement": {

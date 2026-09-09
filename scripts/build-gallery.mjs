@@ -90,14 +90,14 @@ async function cornerCheck(pngPath) {
 }
 
 const jobs = [
-  ["human-01-en", "examples/page-022.json", "en"],
-  ["human-01-ru", "examples/page-022.json", "ru"],
-  ["human-01-bottom", "fixtures/human-01-bottom.json", "en"],
-  ["human-01-top", "fixtures/human-01-top.json", "en"],
-  ["human-01-left", "fixtures/human-01-left.json", "en"],
-  ["human-01-right", "fixtures/human-01-right.json", "en"],
-  ["glitch-01", "fixtures/glitch-01.json", "en"],
-  ["glitch-breaking-01", "fixtures/glitch-breaking-01.json", "en"],
+  ["speech-en", "examples/page-022.json", "en"],
+  ["speech-ru", "examples/page-022.json", "ru"],
+  ["speech-bottom", "fixtures/speech-bottom.json", "en"],
+  ["speech-top", "fixtures/speech-top.json", "en"],
+  ["speech-left", "fixtures/speech-left.json", "en"],
+  ["speech-right", "fixtures/speech-right.json", "en"],
+  ["glitch", "fixtures/glitch.json", "en"],
+  ["shatter", "fixtures/shatter.json", "en"],
   ["multi-balloon", "fixtures/multi-balloon.json", "en"],
 ];
 

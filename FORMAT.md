@@ -43,7 +43,7 @@ Minimal skeleton:
       "id": "P022-02-B01",
       "panelId": "P022-02",
       "speakerId": "lex",
-      "shapeId": "human-01",
+      "shapeId": "speech",
       "placement": { "x": 930, "y": 1110, "width": 560, "height": 300 },
       "content": { "en": { "lines": ["We keep", "moving."] } }
     }
@@ -219,7 +219,7 @@ English geometry is never reused as a fixed Russian container. If no override ex
 
 ## 7. Styling knobs
 
-These apply to the **rounded-rect family** (`human-01`, `glitch-01`, `glitch-breaking-01`). Ref-sheet shapes ignore `cornerRadius` / `edge` for the silhouette (they map a fixed template path).
+These apply to the **rounded-rect family** (`speech`, `glitch`, `shatter`). Ref-sheet shapes ignore `cornerRadius` / `edge` for the silhouette (they map a fixed template path).
 
 ### `cornerRadius` — `0..1`
 
@@ -233,17 +233,17 @@ Corner roundness as a fraction of `min(body.w, body.h) / 2`:
 
 Defaults when omitted:
 
-- `human-01` → `1`
-- `glitch-*` → `0`
+- `speech` → `1`
+- `glitch` / `shatter` → `0`
 - ref shapes → n/a (template)
 
-**Glitch reuse:** the same `human-01` geometry family with `cornerRadius: 0` (and optionally `edge: "jagged"`) reads as robot/playback without a separate silhouette. Dedicated `glitch-01` / `glitch-breaking-01` ids still exist (different fill/stroke defaults; breaking adds a lightning top notch).
+**Glitch reuse:** the same `speech` geometry family with `cornerRadius: 0` (and optionally `edge: "jagged"`) reads as robot/playback without a separate silhouette. Dedicated `glitch` / `shatter` ids still exist (different fill/stroke defaults; breaking adds a lightning top notch).
 
 ### `edge` — `smooth` \| `jagged`
 
 | Value | Outline |
 | --- | --- |
-| `smooth` | Clean comic curves (default for human) |
+| `smooth` | Clean comic curves (default for speech) |
 | `jagged` | Angular / vibrating outline (default for glitch) |
 
 Jagged also clamps corner radius so edges stay edgy even if radius is mid-range.
@@ -263,9 +263,11 @@ Additional `{ placement, content }` lobes fused with the primary body into **one
 
 Each lobe needs locale content for the requested language. Reading order is typically top → bottom. Tail attaches to the lobe closest to the tip.
 
-For **ref-01** (`chain-2`), lobe lettering can sit in template content bands on the fitted frame; for rounded-rect shapes, lobes expand as separate fitted bodies then fuse.
+For **chain**, lobe lettering can sit in template content bands on the fitted frame; for rounded-rect shapes, lobes expand as separate fitted bodies then fuse.
 
 ---
+
+> **Shape ID rename (0.1.0):** public ids are now generic names (`speech`, `glitch`, `shatter`, `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect`). Old ids (`human-01`, `glitch-01`, `glitch-breaking-01`, `ref-01`…`ref-09`) are not accepted.
 
 ## 8. Shape catalog
 
@@ -275,29 +277,29 @@ Registered `shapeId` values (schema enum). All are implemented in profile `rift-
 
 | `shapeId` | Defaults | Notes |
 | --- | --- | --- |
-| `human-01` | radius `1`, `smooth`, fill `#fffaf0` | Soft comic speech |
-| `glitch-01` | radius `0`, `jagged`, mint fill | Found-recording / robot |
-| `glitch-breaking-01` | radius `0`, `jagged`, pinkish fill | Same + lightning notch on top edge |
+| `speech` | radius `1`, `smooth`, fill `#fffaf0` | Soft comic speech |
+| `glitch` | radius `0`, `jagged`, mint fill | Found-recording / robot |
+| `shatter` | radius `0`, `jagged`, pinkish fill | Same + lightning notch on top edge |
 
 All three call the shared rounded-rect builder (`cornerRadius`, `edge`, `lobes`, open tail).
 
 ### Ref-sheet family (hand-traced templates)
 
-Silhouettes from Lex hand-sheet fill masks, mapped uniformly into the fitted frame. Aliases are **documentation nicknames only** — manifests must use `ref-0N` as `shapeId` (aliases are not accepted by the schema).
+Silhouettes from Lex hand-sheet fill masks, mapped uniformly into the fitted frame. Use these ids directly as `shapeId`.
 
-| `shapeId` | Alias | Character |
-| --- | --- | --- |
-| `ref-01` | `chain-2` | Two-lobe chained speech |
-| `ref-02` | `cloud` | Soft cloud / scalloped |
-| `ref-03` | `needle` | Tall needle with long tip |
-| `ref-04` | `round` | Round speech |
-| `ref-05` | `hook` | Hook tail baked in |
-| `ref-06` | `lightning` | Angular lightning body |
-| `ref-07` | `fluffy` | Fluffy / scalloped |
-| `ref-08` | `thought` | Thought bubble + dots |
-| `ref-09` | `rect` | Rectangular with taper |
+| `shapeId` | Character |
+| --- | --- |
+| `chain` | Two-lobe chained speech |
+| `cloud` | Soft cloud / scalloped |
+| `needle` | Tall needle with long tip |
+| `round` | Round speech |
+| `hook` | Hook tail baked in |
+| `lightning` | Angular lightning body |
+| `fluffy` | Fluffy / scalloped |
+| `thought` | Thought bubble + dots |
+| `rect` | Rectangular with taper |
 
-Ref shapes use **content bands** (fractions of the mapped frame) so lettering sits in the body, not the baked tail or thought dots. `ref-01` also defines a second lobe band for per-lobe lines.
+Ref shapes use **content bands** (fractions of the mapped frame) so lettering sits in the body, not the baked tail or thought dots. `chain` also defines a second lobe band for per-lobe lines.
 
 Unknown / unimplemented shape → `UNKNOWN_SHAPE` (error). With the current profile every catalog id is implemented; the code still gates on `implemented`.
 
@@ -419,7 +421,7 @@ Use extensionless imports. `renderPage` is pure relative to compiled profiles an
 
 ### Bilingual page-022 (`examples/page-022.json`)
 
-- One `human-01` balloon for Lex, bilingual `lines`, Russian `localeOverrides` for wider placement + `tailBend`.
+- One `speech` balloon for Lex, bilingual `lines`, Russian `localeOverrides` for wider placement + `tailBend`.
 - Hard exclusions on Lex face and Glitch lens.
 - A `silent` item for Glitch (intentional no balloon).
 
@@ -431,9 +433,9 @@ bun run wubble -- render examples/page-022.json --locale ru --output /tmp/p022.r
 
 ### Chain-2 with per-lobe lines (`fixtures/chain-three.json`)
 
-`human-01` + `lobes` (two extra beats). Primary `content` is the top lobe; each lobe has its own `lines`. One bottom tail to `mouth`.
+`speech` + `lobes` (two extra beats). Primary `content` is the top lobe; each lobe has its own `lines`. One bottom tail to `mouth`.
 
-For the ref-sheet chain silhouette use `shapeId: "ref-01"` (alias **chain-2**) and put secondary dialogue in `lobes` so lettering lands in the template’s lobe content band.
+For the ref-sheet chain silhouette use `shapeId: "chain"` and put secondary dialogue in `lobes` so lettering lands in the template’s lobe content band.
 
 ### Ref shape
 
@@ -443,7 +445,7 @@ For the ref-sheet chain silhouette use `shapeId: "ref-01"` (alias **chain-2**) a
   "id": "REF-CLOUD",
   "panelId": "P1",
   "speakerId": "lex",
-  "shapeId": "ref-02",
+  "shapeId": "cloud",
   "placement": { "x": 200, "y": 180, "width": 520, "height": 360 },
   "content": { "en": { "lines": ["Soft cloud", "lettering."] } }
 }
@@ -453,7 +455,7 @@ Text expands the frame; the cloud silhouette maps into it. Do not set `cornerRad
 
 ### Corner-radius robot (`fixtures/corners-grid.json`)
 
-Same `human-01` family, four variants:
+Same `speech` family, four variants:
 
 | Item | Knobs | Look |
 | --- | --- | --- |
@@ -480,7 +482,7 @@ Gallery strip of the reuse pattern: `demo-out/gallery/glitch-reuse-*.png` (human
 ### Must not
 
 - Emit raw SVG, path `d` strings, or arbitrary filters/transforms
-- Invent shape IDs or aliases as if they were schema values (`cloud` is not a `shapeId`; use `ref-02`)
+- Invent shape IDs outside the schema enum (use catalog names only, e.g. `cloud`, `speech`)
 - Change fonts, digests, fill/stroke/padding (those live in the profile)
 - Disable hard validation gates or invent diagnostic codes
 - Reuse English fitted bounds as a fixed Russian container

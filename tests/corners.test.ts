@@ -138,11 +138,11 @@ describe("cornerRadius lettering density", () => {
     const content = {
       lines: ["Signal locked. Replay ready.", "We keep moving through the static."],
     };
-    const soft = fitBalloonText(content, placement, "soft", "human-01", {
+    const soft = fitBalloonText(content, placement, "soft", "speech", {
       cornerRadius: 1,
       edge: "smooth",
     });
-    const square = fitBalloonText(content, placement, "sq", "human-01", {
+    const square = fitBalloonText(content, placement, "sq", "speech", {
       cornerRadius: 0,
       edge: "smooth",
     });
@@ -161,13 +161,13 @@ describe("cornerRadius lettering density", () => {
   });
 
   test("radius 0 smooth matches absolute pads (no extra corner inset)", () => {
-    const base = resolveShapePadding("human-01", 640, 320);
-    const sq = resolveLetteringPads("human-01", 640, 320, {
+    const base = resolveShapePadding("speech", 640, 320);
+    const sq = resolveLetteringPads("speech", 640, 320, {
       cornerRadius: 0,
       edge: "smooth",
     });
     expect(sq).toEqual(base);
-    const soft = resolveLetteringPads("human-01", 640, 320, {
+    const soft = resolveLetteringPads("speech", 640, 320, {
       cornerRadius: 1,
       edge: "smooth",
     });

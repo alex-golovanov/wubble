@@ -1,13 +1,13 @@
 /**
- * human-01 — soft comic balloon via parameterized rounded-rect + open tail.
- * Default cornerRadius=1 (pill). Respects author cornerRadius / edge / lobes.
+ * shatter — interrupted playback: jagged rect + lightning top notch.
+ * Open tail join via rounded-rect builder (cornerRadius 0 / jagged + notchTop).
  */
 
 import { PROFILE } from "../profile";
 import type { Bounds, EdgeStyle, Point, ShapeGeometry } from "../types";
 import { buildRoundedBalloonPath } from "./rounded-rect";
 
-export interface Human01Input {
+export interface ShatterInput {
   body: Bounds;
   lobeBodies?: Bounds[];
   tip: Point | null;
@@ -17,8 +17,8 @@ export interface Human01Input {
   edge: EdgeStyle;
 }
 
-export function buildHuman01(input: Human01Input): ShapeGeometry {
-  const shape = PROFILE.shapes["human-01"];
+export function buildShatter(input: ShatterInput): ShapeGeometry {
+  const shape = PROFILE.shapes["shatter"];
   const bodies = [input.body, ...(input.lobeBodies ?? [])];
   const path = buildRoundedBalloonPath({
     bodies,
@@ -27,6 +27,7 @@ export function buildHuman01(input: Human01Input): ShapeGeometry {
     attachment: input.attachment,
     cornerRadius: input.cornerRadius,
     edge: input.edge,
+    notchTop: bodies.length === 1,
   });
   return {
     path,

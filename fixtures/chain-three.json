@@ -22,7 +22,7 @@
       "id": "CH-01",
       "panelId": "P1",
       "speakerId": "speaker",
-      "shapeId": "human-01",
+      "shapeId": "speech",
       "cornerRadius": 1,
       "edge": "smooth",
       "placement": { "x": 240, "y": 60, "width": 400, "height": 150 },

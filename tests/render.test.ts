@@ -89,10 +89,10 @@ describe("renderPage", () => {
     expect(svg).toContain("1685.00");
   });
 
-  test("human-01 produces integrated oval+tail silhouette", () => {
+  test("speech produces integrated oval+tail silhouette", () => {
     const m = load("examples/page-022.json");
     const en = renderPage(m, { locale: "en", profileId: PROFILE_ID });
-    expect(en.svg!).toContain('data-shape="human-01"');
+    expect(en.svg!).toContain('data-shape="speech"');
     expect(en.svg!).toContain('data-part="balloon"');
     expect(en.svg!).toContain('data-part="text"');
     expect(en.svg!).toMatch(/<path data-part="balloon" d="M /);
@@ -110,7 +110,7 @@ describe("renderPage", () => {
         id: "X",
         panelId: "P",
         speakerId: "lex",
-        shapeId: "human-01",
+        shapeId: "speech",
         placement: { x: 10, y: 10, width: 100, height: 80 },
         content: { en: { lines: ["Hi"] } },
         rawSvg: "<circle/>",

@@ -10,7 +10,7 @@ Formerly specified as Clip Balloon / clip-balloon. The CLI binary is **`wubble`*
 - [`schemas/page.schema.json`](schemas/page.schema.json) — manifest schema `0.1.0`
 - [`SPEC.md`](SPEC.md) — historical product / rendering contract (see note at top)
 - [`examples/page-022.json`](examples/page-022.json) — bilingual example
-- [`references/human-01.svg`](references/human-01.svg) — human balloon visual reference
+- [`references/speech.svg`](references/speech.svg) — human balloon visual reference
 
 ## Install
 
@@ -56,17 +56,17 @@ All registered ids are implemented:
 
 | Family | IDs |
 | --- | --- |
-| Rounded-rect | `human-01`, `glitch-01`, `glitch-breaking-01` |
-| Ref sheet | `ref-01` … `ref-09` (aliases: chain-2, cloud, needle, round, hook, lightning, fluffy, thought, rect — nicknames only; use `ref-0N` in JSON) |
+| Rounded-rect | `speech`, `glitch`, `shatter` |
+| Ref sheet | `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` |
 
-`human-01` / `glitch-*` share one open-tail rounded-rect builder. Glitch look can also be authored as `human-01` with `cornerRadius: 0` and `edge: "jagged"`. See [`FORMAT.md`](FORMAT.md) for the full catalog and content bands.
+`speech` / `glitch` / `shatter` share one open-tail rounded-rect builder. Glitch look can also be authored as `speech` with `cornerRadius: 0` and `edge: "jagged"`. See [`FORMAT.md`](FORMAT.md) for the full catalog and content bands.
 
 ## Balloon styling knobs
 
 Optional per-balloon fields (schema `0.1.0`):
 
-- **`cornerRadius`** — `0..1` × `min(body.w, body.h) / 2`. `0` = sharp rectangle, `1` = full pill. Defaults: `human-01` → `1`, `glitch-*` → `0`.
-- **`edge`** — `smooth` \| `jagged`. Jagged + low radius → robot/edgy outline. Defaults: human smooth, glitch jagged.
+- **`cornerRadius`** — `0..1` × `min(body.w, body.h) / 2`. `0` = sharp rectangle, `1` = full pill. Defaults: `speech` → `1`, `glitch` / `shatter` → `0`.
+- **`edge`** — `smooth` \| `jagged`. Jagged + low radius → robot/edgy outline. Defaults: speech smooth, glitch/shatter jagged.
 - **`lobes`** — additional `{ placement, content }` lobes fused with the primary body into one chained silhouette (open necks, no crossbars; one tail).
 
 Geometry is a single closed path with an **open tail join** (no crossbar cutting the tip). Ref-sheet shapes map fixed templates; they ignore radius/edge for the silhouette.

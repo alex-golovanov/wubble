@@ -161,8 +161,8 @@ async function main() {
 
   // 4) Refresh human + glitch gallery samples
   for (const [name, file, locale] of [
-    ["corners-human-01", "examples/page-022.json", "en"],
-    ["corners-glitch-01", "fixtures/glitch-01.json", "en"],
+    ["corners-speech", "examples/page-022.json", "en"],
+    ["corners-glitch", "fixtures/glitch.json", "en"],
   ]) {
     const m = load(file);
     const r = renderPage(m, { locale, profileId: PROFILE_ID });

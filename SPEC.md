@@ -7,8 +7,8 @@
 
 
 > **Living format docs:** Implementation has extended beyond this initial proof contract.
-> Registered shapes now include `human-01`, `glitch-01`, `glitch-breaking-01`, and
-> `ref-01`…`ref-09` (with documentation aliases such as chain-2, cloud, needle, …);
+> Registered shapes now include `speech`, `glitch`, `shatter`, and
+> `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect`;
 > balloons accept `cornerRadius`, `edge`, and `lobes`; layout is text-driven
 > (measure → expand body with padding → map silhouette). Treat
 > [`FORMAT.md`](FORMAT.md) and [`schemas/page.schema.json`](schemas/page.schema.json)
@@ -188,24 +188,24 @@ Visible line breaks may be authored with `lines`. Otherwise the renderer compute
 
 The renderer accepts only versioned component IDs compiled into its render profile.
 
-### `human-01`
+### `speech`
 
 Initial human speech-balloon candidate (now the rounded-rect family default):
 
 - soft pill body by default (`cornerRadius` 1, `edge` smooth);
 - warm paper fill and dark outline from the render profile;
 - one tapered tail with an **open join** (single closed silhouette, no crossbar);
-- optional `cornerRadius` / `edge` / `lobes` (same builder as `glitch-*`);
+- optional `cornerRadius` / `edge` / `lobes` (same builder as `glitch` / `shatter`);
 - no random wobble;
 - proportions derived deterministically from fitted bounds.
 
-The candidate source is [`references/human-01.svg`](references/human-01.svg). It is a visual reference for component extraction, not a license for embedding arbitrary SVG from manifests.
+The candidate source is [`references/speech.svg`](references/speech.svg). It is a visual reference for component extraction, not a license for embedding arbitrary SVG from manifests.
 
 ### Later registered components (now implemented)
 
-- `glitch-01` — found-recording / robot balloon (rounded-rect family; default `cornerRadius` 0, `edge` jagged);
-- `glitch-breaking-01` — interrupted playback (same family + lightning top notch);
-- `ref-01` … `ref-09` — hand-sheet silhouettes (aliases: chain-2, cloud, needle, round, hook, lightning, fluffy, thought, rect — nicknames only; use `ref-0N` in JSON);
+- `glitch` — found-recording / robot balloon (rounded-rect family; default `cornerRadius` 0, `edge` jagged);
+- `shatter` — interrupted playback (same family + lightning top notch);
+- `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` — hand-sheet silhouettes;
 - `silent` — manifest-only instruction, never visible.
 
 Geometry for these ids is implemented in the current package. Optional knobs `cornerRadius`, `edge`, and `lobes` apply to the rounded-rect family; ref shapes map fixed templates (see [`FORMAT.md`](FORMAT.md)).
@@ -403,7 +403,7 @@ The first implementation is complete when all of these pass:
 9. two consecutive renders of the same deterministic input tuple are byte-identical;
 10. a golden-image proof confirms that the body masks the tail seam;
 11. the renderer contains no code path for manifest-supplied SVG or arbitrary style values;
-12. the human balloon resembles the supplied `human-01` reference closely enough for explicit visual review.
+12. the human balloon resembles the supplied `speech` reference closely enough for explicit visual review.
 
 Passing these criteria proves the architecture, not the complete Rift City lettering language.
 
@@ -418,7 +418,7 @@ Passing these criteria proves the architecture, not the complete Rift City lette
 ### Milestone B — Human balloon proof
 
 - implement text shaping, measurement and wrapping;
-- implement `human-01` body scaling and deterministic tail construction;
+- implement `speech` body scaling and deterministic tail construction;
 - render English and Russian SVG overlays;
 - add golden and byte-determinism tests.
 
@@ -430,7 +430,7 @@ Passing these criteria proves the architecture, not the complete Rift City lette
 
 ### Milestone D — Rift City channel grammar
 
-- `glitch-01` and `glitch-breaking-01` are implemented (plus ref-sheet shapes and styling knobs; see FORMAT.md);
+- `glitch` and `shatter` are implemented (plus ref-sheet shapes and styling knobs; see FORMAT.md);
 - continue source labels and language-specific interruption behavior as editorial needs grow;
 - validate the `silent` instruction as an intentional absence.
 
@@ -445,7 +445,7 @@ These are real later decisions, not hidden implementation assumptions:
 - open-source license;
 - selected body typeface and its redistribution terms;
 - exact minimum print size and maximum line count;
-- further Glitch / channel grammar beyond the implemented `glitch-*` and knob reuse;
+- further Glitch / channel grammar beyond the implemented `glitch` / `shatter` and knob reuse;
 - whether release SVG keeps text live or converts glyphs to paths;
 - whether PDF export belongs in this package or a publishing adapter.
 

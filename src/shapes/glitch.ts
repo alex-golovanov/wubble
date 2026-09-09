@@ -1,5 +1,5 @@
 /**
- * glitch-01 — robot / found-recording balloon.
+ * glitch — robot / found-recording balloon.
  * Defaults: cornerRadius=0, edge=jagged. Open tail join (no crossbar).
  */
 
@@ -17,8 +17,8 @@ export interface GlitchInput {
   edge: EdgeStyle;
 }
 
-export function buildGlitch01(input: GlitchInput): ShapeGeometry {
-  const shape = PROFILE.shapes["glitch-01"];
+export function buildGlitch(input: GlitchInput): ShapeGeometry {
+  const shape = PROFILE.shapes["glitch"];
   const bodies = [input.body, ...(input.lobeBodies ?? [])];
   const path = buildRoundedBalloonPath({
     bodies,

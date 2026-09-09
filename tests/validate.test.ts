@@ -49,17 +49,17 @@ describe("validatePage", () => {
     );
   });
 
-  test("glitch-01 is implemented — no UNKNOWN_SHAPE", () => {
-    expect(isShapeImplemented("glitch-01")).toBe(true);
+  test("glitch is implemented — no UNKNOWN_SHAPE", () => {
+    expect(isShapeImplemented("glitch")).toBe(true);
     const m = load("fixtures/unknown-shape.json");
     const r = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(r.diagnostics.some((d) => d.code === "UNKNOWN_SHAPE")).toBe(false);
     expect(r.valid).toBe(true);
   });
 
-  test("glitch-breaking-01 is implemented", () => {
-    expect(isShapeImplemented("glitch-breaking-01")).toBe(true);
-    const m = load("fixtures/glitch-breaking-01.json");
+  test("shatter is implemented", () => {
+    expect(isShapeImplemented("shatter")).toBe(true);
+    const m = load("fixtures/shatter.json");
     const r = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(r.valid).toBe(true);
     expect(r.diagnostics.some((d) => d.code === "UNKNOWN_SHAPE")).toBe(false);

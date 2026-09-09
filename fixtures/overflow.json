@@ -72,7 +72,7 @@
       "id": "P022-02-B01",
       "panelId": "P022-02",
       "speakerId": "lex",
-      "shapeId": "human-01",
+      "shapeId": "speech",
       "placement": {
         "x": 100,
         "y": 100,

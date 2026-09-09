@@ -90,5 +90,5 @@ export function wrapText(
 }
 
 export function lineHeightPx(fontSize: number): number {
-  return roundN(fontSize * PROFILE.shapes["human-01"].lineHeightFactor);
+  return roundN(fontSize * PROFILE.shapes["speech"].lineHeightFactor);
 }
