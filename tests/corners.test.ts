@@ -3,15 +3,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderPage, validatePage } from "../src/index";
 import { PROFILE_ID } from "../src/profile";
-import {
-  fitBalloonText,
-  resolveLetteringPads,
-  resolveShapePadding,
-} from "../src/layout";
-import {
-  buildRoundedBalloonPath,
-  pathHasPointNear,
-} from "../src/shapes/rounded-rect";
+import { fitBalloonText, resolveLetteringPads, resolveShapePadding } from "../src/layout";
+import { buildRoundedBalloonPath, pathHasPointNear } from "../src/shapes/rounded-rect";
 
 const root = join(import.meta.dir, "..");
 const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
@@ -151,9 +144,7 @@ describe("cornerRadius lettering density", () => {
     // Soft usable area is smaller: either larger body at same type, or type steps down first.
     expect(soft.fitted!.fontSize).toBeLessThanOrEqual(square.fitted!.fontSize);
     if (soft.fitted!.fontSize === square.fitted!.fontSize) {
-      expect(soft.fitted!.bodyBounds.width).toBeGreaterThanOrEqual(
-        square.fitted!.bodyBounds.width,
-      );
+      expect(soft.fitted!.bodyBounds.width).toBeGreaterThanOrEqual(square.fitted!.bodyBounds.width);
       expect(soft.fitted!.bodyBounds.height).toBeGreaterThanOrEqual(
         square.fitted!.bodyBounds.height,
       );

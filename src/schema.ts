@@ -31,7 +31,7 @@ function prepare(input: unknown): unknown {
     return input;
   }
   const obj = { ...(input as Record<string, unknown>) };
-  delete obj["$schema"];
+  delete obj.$schema;
   return obj;
 }
 

@@ -46,14 +46,14 @@ export const PROFILE = {
   id: PROFILE_ID,
   version: PROFILE_VERSION,
   shapes: {
-    "speech": {
+    speech: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 10,
       ...sharedFit,
     },
-    "chain": {
+    chain: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -63,57 +63,57 @@ export const PROFILE = {
       usableWidthFactor: 0.96,
       maxFontSize: 64,
     },
-    "cloud": {
+    cloud: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
       ...refFit,
       paddingRatio: 0.12,
-      usableWidthFactor: 0.90,
+      usableWidthFactor: 0.9,
       maxFontSize: 58,
     },
-    "needle": {
+    needle: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
       ...refFit,
-      paddingRatio: 0.10,
+      paddingRatio: 0.1,
       usableWidthFactor: 0.92,
       maxFontSize: 62,
     },
-    "round": {
+    round: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
       ...refFit,
-      paddingRatio: 0.10,
+      paddingRatio: 0.1,
       usableWidthFactor: 0.92,
       maxFontSize: 64,
     },
-    "hook": {
+    hook: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
       ...refFit,
-      paddingRatio: 0.10,
+      paddingRatio: 0.1,
       usableWidthFactor: 0.94,
       maxFontSize: 62,
     },
-    "lightning": {
+    lightning: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
       ...refFit,
-      paddingRatio: 0.10,
+      paddingRatio: 0.1,
       usableWidthFactor: 0.92,
       maxFontSize: 58,
     },
-    "fluffy": {
+    fluffy: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -123,17 +123,17 @@ export const PROFILE = {
       usableWidthFactor: 0.86,
       maxFontSize: 56,
     },
-    "thought": {
+    thought: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
       ...refFit,
-      paddingRatio: 0.10,
+      paddingRatio: 0.1,
       usableWidthFactor: 0.92,
       maxFontSize: 62,
     },
-    "rect": {
+    rect: {
       implemented: true as const,
       fill: "#fffaf0",
       stroke: "#241f1a",
@@ -148,13 +148,12 @@ export const PROFILE = {
     role: "body",
     fontFamily: "Noto Sans",
     fontFile: "assets/fonts/NotoSans-Regular.otf",
-    fontDigestSha256:
-      "bfb44de2c2031c391ff856943fe8f105ebb5d725cb9a04d493d211d5bbd5c21b",
+    fontDigestSha256: "bfb44de2c2031c391ff856943fe8f105ebb5d725cb9a04d493d211d5bbd5c21b",
   },
   numberPrecision: 2,
 } as const;
 
-export type ShapeProfile = (typeof PROFILE.shapes)["speech"];
+export type ShapeProfile = typeof PROFILE.shapes.speech;
 
 let cachedFontBytes: Buffer | null = null;
 let cachedFontBase64: string | null = null;

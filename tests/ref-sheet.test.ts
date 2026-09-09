@@ -53,7 +53,7 @@ describe("ref-sheet templates", () => {
 
   test("cream hook template exists and is distinct from hook", () => {
     const cream = REF_TEMPLATES["ref-cream-hook"].path;
-    const hook = REF_TEMPLATES["hook"].path;
+    const hook = REF_TEMPLATES.hook.path;
     expect(cream).not.toEqual(hook);
     expect(cream).toContain("Z");
     const mapped = mapTemplatePath(cream, [0, 0, 1000, 1000], {

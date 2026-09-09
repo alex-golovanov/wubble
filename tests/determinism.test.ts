@@ -14,9 +14,7 @@ describe("determinism", () => {
     const a = renderPage(m, { locale: "en", profileId: PROFILE_ID });
     const b = renderPage(m, { locale: "en", profileId: PROFILE_ID });
     expect(a.svg).toBe(b.svg);
-    expect(serializeDiagnostics(a.diagnostics)).toBe(
-      serializeDiagnostics(b.diagnostics),
-    );
+    expect(serializeDiagnostics(a.diagnostics)).toBe(serializeDiagnostics(b.diagnostics));
   });
 
   test("ru consecutive renders byte-identical", () => {

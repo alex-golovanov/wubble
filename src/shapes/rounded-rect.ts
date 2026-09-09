@@ -38,11 +38,7 @@ function clamp01(n: number): number {
   return n;
 }
 
-export function resolveAttachmentSide(
-  body: Bounds,
-  tip: Point,
-  attachment: Attachment,
-): Side {
+export function resolveAttachmentSide(body: Bounds, tip: Point, attachment: Attachment): Side {
   if (attachment !== "auto") return attachment;
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
@@ -76,10 +72,7 @@ function joinClockwise(
   const cy = body.y + body.height / 2;
   switch (side) {
     case "bottom": {
-      const ideal = Math.max(
-        body.x + hw + 4,
-        Math.min(body.x + body.width - hw - 4, tip.x),
-      );
+      const ideal = Math.max(body.x + hw + 4, Math.min(body.x + body.width - hw - 4, tip.x));
       const midX = ideal * 0.65 + cx * 0.35;
       const y = body.y + body.height;
       return {
@@ -89,10 +82,7 @@ function joinClockwise(
       };
     }
     case "top": {
-      const ideal = Math.max(
-        body.x + hw + 4,
-        Math.min(body.x + body.width - hw - 4, tip.x),
-      );
+      const ideal = Math.max(body.x + hw + 4, Math.min(body.x + body.width - hw - 4, tip.x));
       const midX = ideal * 0.65 + cx * 0.35;
       const y = body.y;
       // Clockwise top edge runs left → right.
@@ -103,10 +93,7 @@ function joinClockwise(
       };
     }
     case "right": {
-      const ideal = Math.max(
-        body.y + hw + 4,
-        Math.min(body.y + body.height - hw - 4, tip.y),
-      );
+      const ideal = Math.max(body.y + hw + 4, Math.min(body.y + body.height - hw - 4, tip.y));
       const midY = ideal * 0.65 + cy * 0.35;
       const x = body.x + body.width;
       // Clockwise on right: top → bottom. first=upper, second=lower
@@ -117,10 +104,7 @@ function joinClockwise(
       };
     }
     case "left": {
-      const ideal = Math.max(
-        body.y + hw + 4,
-        Math.min(body.y + body.height - hw - 4, tip.y),
-      );
+      const ideal = Math.max(body.y + hw + 4, Math.min(body.y + body.height - hw - 4, tip.y));
       const midY = ideal * 0.65 + cy * 0.35;
       const x = body.x;
       // Clockwise on left: bottom → top. first=lower, second=upper
@@ -145,9 +129,7 @@ function emit(cmds: Cmd[]): string {
     if (c.t === "M") parts.push(`M ${fmt(R(c.p.x))} ${fmt(R(c.p.y))}`);
     else if (c.t === "L") parts.push(`L ${fmt(R(c.p.x))} ${fmt(R(c.p.y))}`);
     else if (c.t === "Q")
-      parts.push(
-        `Q ${fmt(R(c.c.x))} ${fmt(R(c.c.y))} ${fmt(R(c.p.x))} ${fmt(R(c.p.y))}`,
-      );
+      parts.push(`Q ${fmt(R(c.c.x))} ${fmt(R(c.c.y))} ${fmt(R(c.p.x))} ${fmt(R(c.p.y))}`);
     else
       parts.push(
         `A ${fmt(R(c.r))} ${fmt(R(c.r))} 0 0 ${c.sweep} ${fmt(R(c.p.x))} ${fmt(R(c.p.y))}`,
@@ -246,13 +228,7 @@ function jagPoints(from: Point, to: Point, amp: number, steps: number): Point[] 
   return out;
 }
 
-function edgeTo(
-  cmds: Cmd[],
-  from: Point,
-  to: Point,
-  edge: EdgeStyle,
-  body: Bounds,
-): void {
+function edgeTo(cmds: Cmd[], from: Point, to: Point, edge: EdgeStyle, body: Bounds): void {
   if (edge === "jagged") {
     const amp = Math.min(body.width, body.height) * 0.045;
     for (const p of jagPoints(from, to, amp, 5)) cmds.push({ t: "L", p });
@@ -353,9 +329,7 @@ function chainedPath(
   cornerRadius: number,
   edge: EdgeStyle,
 ): string {
-  const lobes = [...bodiesIn].sort(
-    (a, b) => a.y + a.height / 2 - (b.y + b.height / 2),
-  );
+  const lobes = [...bodiesIn].sort((a, b) => a.y + a.height / 2 - (b.y + b.height / 2));
   if (lobes.length === 1) {
     return singleBodyPath(lobes[0]!, tip, bend, attachment, cornerRadius, edge);
   }
@@ -365,10 +339,7 @@ function chainedPath(
     let best = Infinity;
     for (let i = 0; i < lobes.length; i++) {
       const b = lobes[i]!;
-      const d = Math.hypot(
-        tip.x - (b.x + b.width / 2),
-        tip.y - (b.y + b.height / 2),
-      );
+      const d = Math.hypot(tip.x - (b.x + b.width / 2), tip.y - (b.y + b.height / 2));
       if (d < best) {
         best = d;
         tailIdx = i;
@@ -377,8 +348,7 @@ function chainedPath(
   }
 
   const rOf = (b: Bounds) => radiusPx(b, cornerRadius, edge);
-  const neckHalf = (a: Bounds, b: Bounds) =>
-    Math.max(14, Math.min(a.width, b.width) * 0.22);
+  const neckHalf = (a: Bounds, b: Bounds) => Math.max(14, Math.min(a.width, b.width) * 0.22);
 
   type Neck = { mid: number; half: number; yTop: number; yBot: number };
   const necks: Neck[] = [];
@@ -445,13 +415,7 @@ function chainedPath(
     if (i > 0) {
       // Arrive at top edge via neck; go to top-right corner and arc down
       const n = necks[i - 1]!;
-      edgeTo(
-        cmds,
-        { x: n.mid + n.half, y: n.yBot },
-        { x: b.x + b.width - r, y: b.y },
-        edge,
-        b,
-      );
+      edgeTo(cmds, { x: n.mid + n.half, y: n.yBot }, { x: b.x + b.width - r, y: b.y }, edge, b);
       arcCorner(cmds, r, { x: b.x + b.width, y: b.y + r });
     }
 
@@ -579,12 +543,7 @@ export function buildRoundedBalloonPath(input: RoundedBalloonInput): string {
 }
 
 /** Explicit endpoint/control samples from a path (for unit tests). */
-export function pathHasPointNear(
-  path: string,
-  x: number,
-  y: number,
-  tol = 1.5,
-): boolean {
+export function pathHasPointNear(path: string, x: number, y: number, tol = 1.5): boolean {
   const re = /(-?\d+\.\d+|-?\d+)/g;
   const nums: number[] = [];
   let m: RegExpExecArray | null;
@@ -599,7 +558,6 @@ export function pathHasPointNear(
   return false;
 }
 
-
 /**
  * Effective lettering insets for a rounded/jagged body.
  * Padding policy stays the same; corners (and jagged teeth) reduce usable area.
@@ -613,11 +571,7 @@ export function contentInsetsForRoundedBody(
   cornerRadius: number,
   edge: EdgeStyle,
 ): { padX: number; padY: number } {
-  const r = radiusPx(
-    { x: 0, y: 0, width: bodyW, height: bodyH },
-    cornerRadius,
-    edge,
-  );
+  const r = radiusPx({ x: 0, y: 0, width: bodyW, height: bodyH }, cornerRadius, edge);
   const jag = edge === "jagged" ? Math.min(bodyW, bodyH) * 0.045 : 0;
   let ix = Math.max(padX, jag);
   let iy = Math.max(padY, jag);

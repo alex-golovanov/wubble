@@ -20,6 +20,21 @@ bun install
 
 Requires [Bun](https://bun.sh) ≥ 1.3.
 
+## Check / lint / format
+
+Uses **TypeScript** (`tsc --noEmit`), **oxlint** (with type-aware rules via `oxlint-tsgolint`), and **oxfmt**.
+
+```sh
+bun run typecheck   # tsc --noEmit
+bun run lint        # oxlint .  (type-aware; typescript/dot-notation enforced)
+bun run lint:fix   # oxlint --fix .
+bun run fmt         # oxfmt .
+bun run fmt:check   # oxfmt --check .
+bun run check       # typecheck + lint + fmt:check
+```
+
+`typescript/dot-notation` rejects `PROFILE.shapes["speech"]`-style string indexing — use `PROFILE.shapes.speech` or `shapeProfile(id)`.
+
 ## CLI
 
 ```sh
@@ -54,10 +69,10 @@ const { svg, diagnostics } = renderPage(manifest, { locale: "ru", profileId: "ri
 
 All registered ids are implemented:
 
-| Family | IDs |
-| --- | --- |
-| Rounded-rect | `speech` |
-| Ref sheet | `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` |
+| Family       | IDs                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------- |
+| Rounded-rect | `speech`                                                                              |
+| Ref sheet    | `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` |
 
 `speech` is the single public rounded-rect shape (open-tail builder). Looks (soft / square / jagged / notched) are authoring knobs, not separate shapeIds. See [`FORMAT.md`](FORMAT.md) for recipes and content bands.
 

@@ -1,17 +1,8 @@
 import { validateSchema } from "./schema";
-import {
-  resolveAnchor,
-  resolveBend,
-  resolvePlacement,
-  validatePage,
-} from "./validate";
+import { resolveAnchor, resolveBend, resolvePlacement, validatePage } from "./validate";
 import { fitBalloonText, resolveLetteringPads } from "./layout";
 import { buildShape } from "./shapes/index";
-import {
-  isRefShapeId,
-  refLobeContentBand,
-  contentBandBox,
-} from "./shapes/ref-sheet";
+import { isRefShapeId, refLobeContentBand, contentBandBox } from "./shapes/ref-sheet";
 import { fontBase64, isShapeImplemented } from "./profile";
 import { fmt } from "./normalize";
 import { hasErrors } from "./diagnostics";
@@ -45,8 +36,7 @@ function textNodesFor(
   const fs = fitted.fontSize;
   const lh = fitted.lineHeight;
   const textBlockH = fitted.contentHeight;
-  const startY =
-    box.y + padY + (box.height - padY * 2 - textBlockH) / 2 + fs * 0.8;
+  const startY = box.y + padY + (box.height - padY * 2 - textBlockH) / 2 + fs * 0.8;
   const midX = box.x + box.width / 2;
   const lines = fitted.lines
     .map((line, i) => {
@@ -68,13 +58,7 @@ function renderBalloonGroup(
 
   const placement = resolvePlacement(item, locale);
   const fitStyle = { cornerRadius: item.cornerRadius, edge: item.edge };
-  const layout = fitBalloonText(
-    content,
-    placement,
-    item.id,
-    item.shapeId,
-    fitStyle,
-  );
+  const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle);
   if (!layout.fitted) return null;
 
   const body = layout.fitted.bodyBounds;
@@ -179,10 +163,7 @@ function serializeSvg(manifest: PageManifest, locale: string): string {
   return lines.join("\n");
 }
 
-export function renderPage(
-  manifestInput: unknown,
-  options: RenderOptions,
-): RenderResult {
+export function renderPage(manifestInput: unknown, options: RenderOptions): RenderResult {
   const report = validatePage(manifestInput, options);
   if (hasErrors(report)) {
     return { svg: null, diagnostics: report };

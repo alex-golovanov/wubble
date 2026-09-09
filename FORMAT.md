@@ -10,15 +10,15 @@ Wubble turns one placement manifest into separate language-specific transparent 
 
 A page manifest is JSON (UTF-8) that declares:
 
-| Field | Role |
-| --- | --- |
-| `schemaVersion` | Must be `"0.1.0"` |
-| `pageId` | Stable page id |
-| `coordinateSpace` | Art pixel grid (shared with the text-free master) |
-| `renderProfile` | Typography / shape profile (`rift-city-proof` @ `0.1.0`) |
-| `subjects` | Speakers/objects with named anchors |
-| `exclusionZones` | Hard/soft no-cover regions |
-| `items` | Balloons and intentional `silent` markers |
+| Field             | Role                                                     |
+| ----------------- | -------------------------------------------------------- |
+| `schemaVersion`   | Must be `"0.1.0"`                                        |
+| `pageId`          | Stable page id                                           |
+| `coordinateSpace` | Art pixel grid (shared with the text-free master)        |
+| `renderProfile`   | Typography / shape profile (`rift-city-proof` @ `0.1.0`) |
+| `subjects`        | Speakers/objects with named anchors                      |
+| `exclusionZones`  | Hard/soft no-cover regions                               |
+| `items`           | Balloons and intentional `silent` markers                |
 
 Required top-level keys; `additionalProperties` is false. Ids match `^[A-Za-z0-9][A-Za-z0-9._-]*$`.
 
@@ -127,10 +127,10 @@ See sections below. `items` must have at least one entry (`balloon` or `silent`)
 }
 ```
 
-| Severity | On balloon-body overlap |
-| --- | --- |
-| `hard` | Error `HARD_EXCLUSION_OVERLAP` — blocks render |
-| `soft` | Warning `SOFT_EXCLUSION_OVERLAP` — still renders |
+| Severity | On balloon-body overlap                          |
+| -------- | ------------------------------------------------ |
+| `hard`   | Error `HARD_EXCLUSION_OVERLAP` — blocks render   |
+| `soft`   | Warning `SOFT_EXCLUSION_OVERLAP` — still renders |
 
 Use hard zones for faces, logos, critical art. Soft zones flag review without failing the build.
 
@@ -174,11 +174,11 @@ Initial body box in art pixels. Layout may **expand** this box (uniformly within
 }
 ```
 
-| Field | Notes |
-| --- | --- |
-| `subjectId` / `anchor` | Must resolve on a subject |
-| `attachment` | `top` \| `right` \| `bottom` \| `left` \| `auto` |
-| `bend` | Optional control point for the open tail |
+| Field                  | Notes                                            |
+| ---------------------- | ------------------------------------------------ |
+| `subjectId` / `anchor` | Must resolve on a subject                        |
+| `attachment`           | `top` \| `right` \| `bottom` \| `left` \| `auto` |
+| `bend`                 | Optional control point for the open tail         |
 
 Geometry is a **single closed path** with an **open tail join** (no crossbar cutting the tip). `auto` picks the side from tip vs body center.
 
@@ -225,20 +225,20 @@ These apply to the **rounded-rect family** (public shape id `speech`). Ref-sheet
 
 Corner roundness as a fraction of `min(body.w, body.h) / 2`:
 
-| Value | Look |
-| --- | --- |
-| `0` | Sharp rectangle |
-| `~0.45` | Soft rounded rect |
-| `1` | Full pill / stadium |
+| Value   | Look                |
+| ------- | ------------------- |
+| `0`     | Sharp rectangle     |
+| `~0.45` | Soft rounded rect   |
+| `1`     | Full pill / stadium |
 
 Default when omitted: `speech` → `1`. Ref shapes → n/a (template).
 
 ### `edge` — `smooth` \| `jagged`
 
-| Value | Outline |
-| --- | --- |
+| Value    | Outline                                 |
+| -------- | --------------------------------------- |
 | `smooth` | Clean comic curves (default for speech) |
-| `jagged` | Angular / jagged outline |
+| `jagged` | Angular / jagged outline                |
 
 Jagged also clamps corner radius so edges stay edgy even if radius is mid-range.
 
@@ -277,20 +277,20 @@ Registered `shapeId` values (schema enum). All are implemented in profile `rift-
 
 ### Rounded-rect family (one public shape)
 
-| `shapeId` | Defaults | Notes |
-| --- | --- | --- |
-| `speech` | `cornerRadius` `1`, `edge` `smooth`, `notchTop` `false`, cream fill | Soft comic speech; all looks via knobs |
+| `shapeId` | Defaults                                                            | Notes                                  |
+| --------- | ------------------------------------------------------------------- | -------------------------------------- |
+| `speech`  | `cornerRadius` `1`, `edge` `smooth`, `notchTop` `false`, cream fill | Soft comic speech; all looks via knobs |
 
 `speech` calls the shared rounded-rect builder (`cornerRadius`, `edge`, `notchTop`, `lobes`, open tail, optional appearance overrides).
 
 #### Look recipes (authoring knobs, not separate shapeIds)
 
-| Look | Knobs |
-| --- | --- |
-| Soft pill | `speech` (defaults) |
-| Sharp box | `speech` + `cornerRadius: 0` |
-| Jagged / angular | `speech` + `cornerRadius: 0` + `edge: "jagged"` (+ optional mint `fill` `#e7f2e9` / `stroke` `#142018`) |
-| Notched / interrupted | same as jagged + `notchTop: true` (+ optional pinkish `fill` `#f3e6e6` / `stroke` `#2a1414`) |
+| Look                  | Knobs                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| Soft pill             | `speech` (defaults)                                                                                     |
+| Sharp box             | `speech` + `cornerRadius: 0`                                                                            |
+| Jagged / angular      | `speech` + `cornerRadius: 0` + `edge: "jagged"` (+ optional mint `fill` `#e7f2e9` / `stroke` `#142018`) |
+| Notched / interrupted | same as jagged + `notchTop: true` (+ optional pinkish `fill` `#f3e6e6` / `stroke` `#2a1414`)            |
 
 Fixtures: `fixtures/speech-jagged.json`, `fixtures/speech-notch.json`. Gallery: `scripts/gen-speech-styles.mjs` → Soft / Square / Jagged.
 
@@ -298,17 +298,17 @@ Fixtures: `fixtures/speech-jagged.json`, `fixtures/speech-notch.json`. Gallery: 
 
 Silhouettes from Lex hand-sheet fill masks, mapped uniformly into the fitted frame. Use these ids directly as `shapeId`.
 
-| `shapeId` | Character |
-| --- | --- |
-| `chain` | Two-lobe chained speech |
-| `cloud` | Soft cloud / scalloped |
-| `needle` | Tall needle with long tip |
-| `round` | Round speech |
-| `hook` | Hook tail baked in |
-| `lightning` | Angular lightning body |
-| `fluffy` | Fluffy / scalloped |
-| `thought` | Thought bubble + dots |
-| `rect` | Rectangular with taper |
+| `shapeId`   | Character                 |
+| ----------- | ------------------------- |
+| `chain`     | Two-lobe chained speech   |
+| `cloud`     | Soft cloud / scalloped    |
+| `needle`    | Tall needle with long tip |
+| `round`     | Round speech              |
+| `hook`      | Hook tail baked in        |
+| `lightning` | Angular lightning body    |
+| `fluffy`    | Fluffy / scalloped        |
+| `thought`   | Thought bubble + dots     |
+| `rect`      | Rectangular with taper    |
 
 Ref shapes use **content bands** (fractions of the mapped frame) so lettering sits in the body, not the baked tail or thought dots. `chain` also defines a second lobe band for per-lobe lines.
 
@@ -354,20 +354,20 @@ Structured report:
 }
 ```
 
-| Code | Level | Meaning |
-| --- | --- | --- |
-| `SCHEMA_INVALID` | error | Manifest fails JSON Schema |
-| `LOCALE_MISSING` | error | No content for requested locale (item or lobe) |
-| `GLYPH_MISSING` | error | Font cannot render a required character |
-| `TEXT_OVERFLOW` | error | Cannot fit within type / line / expand limits |
-| `OUT_OF_BOUNDS` | error | Body (or lobe) leaves the coordinate space |
-| `HARD_EXCLUSION_OVERLAP` | error | Body covers a hard exclusion |
-| `UNKNOWN_SHAPE` | error | Shape not implemented in profile |
-| `UNKNOWN_ANCHOR` | error | Tail subject/anchor missing |
-| `BALLOON_OVERLAP` | warning | Two balloon bodies overlap |
-| `SOFT_EXCLUSION_OVERLAP` | warning | Body covers a soft exclusion |
-| `TAIL_CROSSES_BODY` | warning | Tail crosses another balloon |
-| `READING_ORDER_AMBIGUOUS` | warning | Geometry conflicts with item order |
+| Code                      | Level   | Meaning                                        |
+| ------------------------- | ------- | ---------------------------------------------- |
+| `SCHEMA_INVALID`          | error   | Manifest fails JSON Schema                     |
+| `LOCALE_MISSING`          | error   | No content for requested locale (item or lobe) |
+| `GLYPH_MISSING`           | error   | Font cannot render a required character        |
+| `TEXT_OVERFLOW`           | error   | Cannot fit within type / line / expand limits  |
+| `OUT_OF_BOUNDS`           | error   | Body (or lobe) leaves the coordinate space     |
+| `HARD_EXCLUSION_OVERLAP`  | error   | Body covers a hard exclusion                   |
+| `UNKNOWN_SHAPE`           | error   | Shape not implemented in profile               |
+| `UNKNOWN_ANCHOR`          | error   | Tail subject/anchor missing                    |
+| `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap                     |
+| `SOFT_EXCLUSION_OVERLAP`  | warning | Body covers a soft exclusion                   |
+| `TAIL_CROSSES_BODY`       | warning | Tail crosses another balloon                   |
+| `READING_ORDER_AMBIGUOUS` | warning | Geometry conflicts with item order             |
 
 `valid` is false if any **error** is present. `render` / `proof` refuse to write output on errors. Warnings do not block. Suggestions are advisory — the renderer never auto-applies them.
 
@@ -468,12 +468,12 @@ Text expands the frame; the cloud silhouette maps into it. Do not set `cornerRad
 
 Same `speech` family, four variants:
 
-| Item | Knobs | Look |
-| --- | --- | --- |
-| radius 0 | `cornerRadius: 0`, `smooth` | Sharp rect |
-| mid | `0.45`, `smooth` | Soft rounded |
-| radius 1 | `1`, `smooth` | Pill |
-| jagged | `0`, `jagged` | Angular square |
+| Item     | Knobs                       | Look           |
+| -------- | --------------------------- | -------------- |
+| radius 0 | `cornerRadius: 0`, `smooth` | Sharp rect     |
+| mid      | `0.45`, `smooth`            | Soft rounded   |
+| radius 1 | `1`, `smooth`               | Pill           |
+| jagged   | `0`, `jagged`               | Angular square |
 
 Gallery strip: `demo-out/gallery/speech-styles-*.png` (Soft · Square · Jagged) via `scripts/gen-speech-styles.mjs`.
 
@@ -505,12 +505,12 @@ Dialogue and translation remain human-owned (or a separate translation pipeline)
 
 ## Quick reference links
 
-| Artifact | Path |
-| --- | --- |
-| Schema | [`schemas/page.schema.json`](schemas/page.schema.json) |
-| Types | [`src/types.ts`](src/types.ts) |
-| Profile | [`src/profile.ts`](src/profile.ts) |
-| Shapes | [`src/shapes/`](src/shapes/) |
-| Example | [`examples/page-022.json`](examples/page-022.json) |
-| Fixtures | [`fixtures/`](fixtures/) |
-| Product SPEC | [`SPEC.md`](SPEC.md) |
+| Artifact     | Path                                                   |
+| ------------ | ------------------------------------------------------ |
+| Schema       | [`schemas/page.schema.json`](schemas/page.schema.json) |
+| Types        | [`src/types.ts`](src/types.ts)                         |
+| Profile      | [`src/profile.ts`](src/profile.ts)                     |
+| Shapes       | [`src/shapes/`](src/shapes/)                           |
+| Example      | [`examples/page-022.json`](examples/page-022.json)     |
+| Fixtures     | [`fixtures/`](fixtures/)                               |
+| Product SPEC | [`SPEC.md`](SPEC.md)                                   |

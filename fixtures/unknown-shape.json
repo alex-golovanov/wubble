@@ -90,14 +90,10 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "Static"
-          ]
+          "lines": ["Static"]
         },
         "ru": {
-          "lines": [
-            "Шум"
-          ]
+          "lines": ["Шум"]
         }
       },
       "cornerRadius": 0,

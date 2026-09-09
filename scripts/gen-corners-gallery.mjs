@@ -68,13 +68,6 @@ async function svgToLightPng(svg, outPath, pad = 28) {
   return outPath;
 }
 
-function bareBalloonSvg(path, fill, stroke, sw, vbW, vbH) {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vbW} ${vbH}" width="${vbW}" height="${vbH}">
-  <path d="${path}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
-</svg>`;
-}
-
 async function main() {
   // 1) Full corners grid from fixture
   {

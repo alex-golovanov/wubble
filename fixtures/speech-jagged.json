@@ -54,16 +54,10 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "Recording",
-            "playback"
-          ]
+          "lines": ["Recording", "playback"]
         },
         "ru": {
-          "lines": [
-            "Запись",
-            "воспроизведения"
-          ]
+          "lines": ["Запись", "воспроизведения"]
         }
       },
       "cornerRadius": 0,

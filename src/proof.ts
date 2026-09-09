@@ -4,10 +4,7 @@ import { readFileSync } from "node:fs";
 /**
  * Composite a transparent SVG overlay over an art image → PNG buffer.
  */
-export async function compositeProof(
-  svg: string,
-  artPath: string,
-): Promise<Buffer> {
+export async function compositeProof(svg: string, artPath: string): Promise<Buffer> {
   const art = sharp(artPath);
   const meta = await art.metadata();
   const width = meta.width;

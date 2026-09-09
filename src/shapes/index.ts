@@ -26,9 +26,7 @@ export function resolveStyle(
 ): { cornerRadius: number; edge: EdgeStyle } {
   return {
     cornerRadius:
-      cornerRadius != null
-        ? Math.max(0, Math.min(1, cornerRadius))
-        : defaultCornerRadius(shapeId),
+      cornerRadius != null ? Math.max(0, Math.min(1, cornerRadius)) : defaultCornerRadius(shapeId),
     edge: edge ?? defaultEdge(shapeId),
   };
 }

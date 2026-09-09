@@ -32,11 +32,9 @@ function resolveAnchor(
   if (!subject) {
     return {
       tip: null,
-      error: diag(
-        "UNKNOWN_ANCHOR",
-        `Subject "${item.tail.subjectId}" not found for tail.`,
-        { itemId: item.id },
-      ),
+      error: diag("UNKNOWN_ANCHOR", `Subject "${item.tail.subjectId}" not found for tail.`, {
+        itemId: item.id,
+      }),
     };
   }
   const tip = subject.anchors[item.tail.anchor];
@@ -57,10 +55,7 @@ function resolveAnchor(
  * Full validation for a locale (schema + semantic + fit + collisions).
  * Does not serialize SVG.
  */
-export function validatePage(
-  manifestInput: unknown,
-  options: RenderOptions,
-): DiagnosticReport {
+export function validatePage(manifestInput: unknown, options: RenderOptions): DiagnosticReport {
   const diagnostics: Diagnostic[] = [];
   const schema = validateSchema(manifestInput);
   if (!schema.ok || !schema.manifest) {
@@ -95,7 +90,7 @@ export function validatePage(
       diagnostics.push(
         diag(
           "UNKNOWN_SHAPE",
-          `Shape "${item.shapeId}" is not implemented in profile ${PROFILE_ID}@${PROFILE.version}.`,
+          `Shape "${String(item.shapeId)}" is not implemented in profile ${PROFILE_ID}@${PROFILE.version}.`,
           { itemId: item.id },
         ),
       );
@@ -115,13 +110,7 @@ export function validatePage(
 
     const placement = resolvePlacement(item, locale);
     const fitStyle = { cornerRadius: item.cornerRadius, edge: item.edge };
-    const layout = fitBalloonText(
-      content,
-      placement,
-      item.id,
-      item.shapeId,
-      fitStyle,
-    );
+    const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle);
     diagnostics.push(...layout.diagnostics);
     if (!layout.fitted) continue;
 
@@ -174,19 +163,15 @@ export function validatePage(
       if (rectsOverlap(body, zone.bounds)) {
         if (zone.severity === "hard") {
           diagnostics.push(
-            diag(
-              "HARD_EXCLUSION_OVERLAP",
-              `Balloon overlaps hard exclusion "${zone.id}".`,
-              { itemId: item.id },
-            ),
+            diag("HARD_EXCLUSION_OVERLAP", `Balloon overlaps hard exclusion "${zone.id}".`, {
+              itemId: item.id,
+            }),
           );
         } else {
           diagnostics.push(
-            diag(
-              "SOFT_EXCLUSION_OVERLAP",
-              `Balloon overlaps soft exclusion "${zone.id}".`,
-              { itemId: item.id },
-            ),
+            diag("SOFT_EXCLUSION_OVERLAP", `Balloon overlaps soft exclusion "${zone.id}".`, {
+              itemId: item.id,
+            }),
           );
         }
       }
@@ -206,11 +191,9 @@ export function validatePage(
       const b = bodyBoundsByItem.get(ids[j]!)!;
       if (rectsOverlap(a, b)) {
         diagnostics.push(
-          diag(
-            "BALLOON_OVERLAP",
-            `Balloons "${ids[i]}" and "${ids[j]}" overlap.`,
-            { itemId: ids[i] },
-          ),
+          diag("BALLOON_OVERLAP", `Balloons "${ids[i]}" and "${ids[j]}" overlap.`, {
+            itemId: ids[i],
+          }),
         );
       }
     }
@@ -232,13 +215,14 @@ export function validatePage(
     };
     for (const [otherId, otherBody] of bodyBoundsByItem) {
       if (otherId === item.id) continue;
-      if (segmentCrossesBounds(start, tip, otherBody) || segmentCrossesBounds(bend, tip, otherBody)) {
+      if (
+        segmentCrossesBounds(start, tip, otherBody) ||
+        segmentCrossesBounds(bend, tip, otherBody)
+      ) {
         diagnostics.push(
-          diag(
-            "TAIL_CROSSES_BODY",
-            `Tail of "${item.id}" crosses body of "${otherId}".`,
-            { itemId: item.id },
-          ),
+          diag("TAIL_CROSSES_BODY", `Tail of "${item.id}" crosses body of "${otherId}".`, {
+            itemId: item.id,
+          }),
         );
       }
     }

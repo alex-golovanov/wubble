@@ -1,25 +1,13 @@
 import { missingGlyphs, measureWidth, wrapText, lineHeightPx } from "./font";
 import { roundN } from "./normalize";
 import { shapeProfile } from "./profile";
-import {
-  isRefShapeId,
-  refContentBand,
-  contentBandBox,
-  type ContentBand,
-} from "./shapes/ref-sheet";
+import { isRefShapeId, refContentBand, contentBandBox, type ContentBand } from "./shapes/ref-sheet";
 import {
   contentInsetsForRoundedBody,
   defaultCornerRadius,
   defaultEdge,
 } from "./shapes/rounded-rect";
-import type {
-  Bounds,
-  Diagnostic,
-  EdgeStyle,
-  FittedText,
-  LocaleContent,
-  ShapeId,
-} from "./types";
+import type { Bounds, Diagnostic, EdgeStyle, FittedText, LocaleContent, ShapeId } from "./types";
 import { diag } from "./diagnostics";
 
 export interface LayoutResult {
@@ -49,7 +37,6 @@ export function resolveShapePadding(
   const padY = roundN(Math.max(shape.paddingY, ratio * minD, strokeGuard));
   return { padX, padY };
 }
-
 
 export interface FitStyle {
   cornerRadius?: number;
@@ -83,14 +70,7 @@ export function resolveLetteringPads(
   // Ref templates already bake silhouette into content bands / usableWidthFactor.
   if (isRefShapeId(shapeId)) return base;
   const { cornerRadius, edge } = resolveFitStyle(shapeId, style);
-  return contentInsetsForRoundedBody(
-    boxW,
-    boxH,
-    base.padX,
-    base.padY,
-    cornerRadius,
-    edge,
-  );
+  return contentInsetsForRoundedBody(boxW, boxH, base.padX, base.padY, cornerRadius, edge);
 }
 
 /**
@@ -193,10 +173,7 @@ export function fitBalloonText(
 
   const useRatio = (shape.paddingRatio ?? 0) > 0;
   // Lobe sub-fits already receive the lettering box; do not re-apply template bands.
-  const band =
-    isRefShapeId(shapeId) && !itemId.includes("#lobe")
-      ? refContentBand(shapeId)
-      : null;
+  const band = isRefShapeId(shapeId) && !itemId.includes("#lobe") ? refContentBand(shapeId) : null;
 
   for (const fontSize of fontSizes) {
     if (useRatio && band) {
@@ -220,9 +197,7 @@ export function fitBalloonText(
 
       const lh = lineHeightPx(fontSize);
       const contentHeight = roundN(lines.length * lh);
-      const contentWidth = roundN(
-        Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0),
-      );
+      const contentWidth = roundN(Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0));
 
       const e = minExpandForBand(
         placement,
@@ -365,9 +340,7 @@ export function fitBalloonText(
       const contentHeight = roundN(lines.length * lh);
       if (contentHeight > maxTextH) continue;
 
-      const contentWidth = roundN(
-        Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0),
-      );
+      const contentWidth = roundN(Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0));
 
       return {
         fitted: {

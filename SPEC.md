@@ -5,7 +5,6 @@
 **Package status:** Implemented as `wubble` 0.1.0 (Milestone A+B; see living-docs note for later extensions)  
 **Primary use:** Generate independently renderable English and Russian comic-lettering overlays from one placement manifest and one text-free art master.
 
-
 > **Living format docs:** Implementation has extended beyond this initial proof contract.
 > Registered shapes now include `speech` and
 > `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect`;
@@ -14,7 +13,6 @@
 > [`FORMAT.md`](FORMAT.md) and [`schemas/page.schema.json`](schemas/page.schema.json)
 > as the living format documentation. This SPEC remains the historical product /
 > determinism contract — do not treat “Later registered components” below as unimplemented.
-
 
 ## 1. Product definition
 
@@ -251,20 +249,20 @@ Validation returns a non-zero exit code for errors and a structured JSON report 
 
 Required diagnostic codes:
 
-| Code | Level | Meaning |
-| --- | --- | --- |
-| `SCHEMA_INVALID` | error | Manifest does not match the declared schema. |
-| `LOCALE_MISSING` | error | A requested locale has no content for an item. |
-| `GLYPH_MISSING` | error | The configured font cannot render a required character. |
-| `TEXT_OVERFLOW` | error | Text cannot fit within hard type and line limits. |
-| `OUT_OF_BOUNDS` | error | Visible geometry leaves the coordinate space. |
-| `HARD_EXCLUSION_OVERLAP` | error | Balloon body covers a hard exclusion zone. |
-| `UNKNOWN_SHAPE` | error | Manifest requests an unregistered component. |
-| `UNKNOWN_ANCHOR` | error | Tail target cannot resolve to a named subject anchor. |
-| `BALLOON_OVERLAP` | warning | Two balloon bodies overlap. |
-| `SOFT_EXCLUSION_OVERLAP` | warning | Balloon body covers a soft exclusion zone. |
-| `TAIL_CROSSES_BODY` | warning | Tail crosses a different balloon or protected subject region. |
-| `READING_ORDER_AMBIGUOUS` | warning | Geometric ordering conflicts with manifest item order. |
+| Code                      | Level   | Meaning                                                       |
+| ------------------------- | ------- | ------------------------------------------------------------- |
+| `SCHEMA_INVALID`          | error   | Manifest does not match the declared schema.                  |
+| `LOCALE_MISSING`          | error   | A requested locale has no content for an item.                |
+| `GLYPH_MISSING`           | error   | The configured font cannot render a required character.       |
+| `TEXT_OVERFLOW`           | error   | Text cannot fit within hard type and line limits.             |
+| `OUT_OF_BOUNDS`           | error   | Visible geometry leaves the coordinate space.                 |
+| `HARD_EXCLUSION_OVERLAP`  | error   | Balloon body covers a hard exclusion zone.                    |
+| `UNKNOWN_SHAPE`           | error   | Manifest requests an unregistered component.                  |
+| `UNKNOWN_ANCHOR`          | error   | Tail target cannot resolve to a named subject anchor.         |
+| `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap.                                   |
+| `SOFT_EXCLUSION_OVERLAP`  | warning | Balloon body covers a soft exclusion zone.                    |
+| `TAIL_CROSSES_BODY`       | warning | Tail crosses a different balloon or protected subject region. |
+| `READING_ORDER_AMBIGUOUS` | warning | Geometric ordering conflicts with manifest item order.        |
 
 Example report:
 
@@ -279,9 +277,7 @@ Example report:
       "level": "error",
       "itemId": "P022-02-B01",
       "message": "Text requires 6 lines; maximum is 4.",
-      "suggestions": [
-        { "field": "localeOverrides.ru.placement.width", "minimum": 620 }
-      ]
+      "suggestions": [{ "field": "localeOverrides.ru.placement.width", "minimum": 620 }]
     }
   ]
 }
@@ -374,15 +370,9 @@ interface RenderResult {
   diagnostics: DiagnosticReport;
 }
 
-declare function validatePage(
-  manifest: unknown,
-  options: RenderOptions
-): DiagnosticReport;
+declare function validatePage(manifest: unknown, options: RenderOptions): DiagnosticReport;
 
-declare function renderPage(
-  manifest: unknown,
-  options: RenderOptions
-): RenderResult;
+declare function renderPage(manifest: unknown, options: RenderOptions): RenderResult;
 ```
 
 `renderPage` is pure relative to the package’s compiled profiles and font assets. File reading, writing and image compositing stay in the CLI layer.

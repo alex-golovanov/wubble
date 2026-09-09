@@ -26,10 +26,7 @@
     "renderProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "version"
-      ],
+      "required": ["id", "version"],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
@@ -75,10 +72,7 @@
     "point": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
+      "required": ["x", "y"],
       "properties": {
         "x": {
           "type": "number"
@@ -91,12 +85,7 @@
     "bounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "width",
-        "height"
-      ],
+      "required": ["x", "y", "width", "height"],
       "properties": {
         "x": {
           "type": "number"
@@ -117,12 +106,7 @@
     "coordinateSpace": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "width",
-        "height",
-        "origin",
-        "units"
-      ],
+      "required": ["width", "height", "origin", "units"],
       "properties": {
         "width": {
           "type": "integer",
@@ -143,11 +127,7 @@
     "subject": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "bounds",
-        "anchors"
-      ],
+      "required": ["id", "bounds", "anchors"],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
@@ -167,11 +147,7 @@
     "exclusionZone": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "bounds",
-        "severity"
-      ],
+      "required": ["id", "bounds", "severity"],
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
@@ -180,10 +156,7 @@
           "$ref": "#/$defs/bounds"
         },
         "severity": {
-          "enum": [
-            "hard",
-            "soft"
-          ]
+          "enum": ["hard", "soft"]
         }
       }
     },
@@ -210,23 +183,15 @@
       },
       "oneOf": [
         {
-          "required": [
-            "text"
-          ],
+          "required": ["text"],
           "not": {
-            "required": [
-              "lines"
-            ]
+            "required": ["lines"]
           }
         },
         {
-          "required": [
-            "lines"
-          ],
+          "required": ["lines"],
           "not": {
-            "required": [
-              "text"
-            ]
+            "required": ["text"]
           }
         }
       ]
@@ -234,11 +199,7 @@
     "tail": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "subjectId",
-        "anchor",
-        "attachment"
-      ],
+      "required": ["subjectId", "anchor", "attachment"],
       "properties": {
         "subjectId": {
           "$ref": "#/$defs/id"
@@ -247,13 +208,7 @@
           "$ref": "#/$defs/id"
         },
         "attachment": {
-          "enum": [
-            "top",
-            "right",
-            "bottom",
-            "left",
-            "auto"
-          ]
+          "enum": ["top", "right", "bottom", "left", "auto"]
         },
         "bend": {
           "$ref": "#/$defs/point"
@@ -275,15 +230,7 @@
     "balloon": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "kind",
-        "id",
-        "panelId",
-        "speakerId",
-        "shapeId",
-        "placement",
-        "content"
-      ],
+      "required": ["kind", "id", "panelId", "speakerId", "shapeId", "placement", "content"],
       "properties": {
         "kind": {
           "const": "balloon"
@@ -373,12 +320,7 @@
     "silent": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "kind",
-        "id",
-        "panelId",
-        "speakerId"
-      ],
+      "required": ["kind", "id", "panelId", "speakerId"],
       "properties": {
         "kind": {
           "const": "silent"
@@ -396,10 +338,7 @@
     },
     "edgeStyle": {
       "type": "string",
-      "enum": [
-        "smooth",
-        "jagged"
-      ],
+      "enum": ["smooth", "jagged"],
       "description": "Outline treatment. smooth = comic curves; jagged = angular/jagged outline."
     },
     "cornerRadius": {
@@ -411,10 +350,7 @@
     "balloonLobe": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "placement",
-        "content"
-      ],
+      "required": ["placement", "content"],
       "description": "Extra lobe fused into a chained multi-bubble silhouette.",
       "properties": {
         "placement": {

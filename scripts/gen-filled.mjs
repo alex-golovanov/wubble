@@ -18,40 +18,40 @@ const BG = "#f3efe6";
 const PAGE = 2200;
 
 const copy = {
-  "chain": {
+  chain: {
     mode: "lobes",
     top: ["We keep moving."],
     bottom: ["No looking back."],
   },
-  "cloud": {
+  cloud: {
     mode: "lines",
     lines: ["Plot twist:", "I'm the weather."],
   },
-  "needle": {
+  needle: {
     mode: "lines",
     lines: ["Long story", "short—", "don't."],
   },
-  "round": {
+  round: {
     mode: "lines",
     lines: ["Trust the", "glitch."],
   },
-  "hook": {
+  hook: {
     mode: "lines",
     lines: ["Soft voice.", "Hard truth."],
   },
-  "lightning": {
+  lightning: {
     mode: "lines",
     lines: ["SYSTEM:", "feelings", "overloaded"],
   },
-  "fluffy": {
+  fluffy: {
     mode: "lines",
     lines: ["Chaos, but", "make it cute."],
   },
-  "thought": {
+  thought: {
     mode: "lines",
     lines: ["…what if we", "just win?"],
   },
-  "rect": {
+  rect: {
     mode: "lines",
     lines: ["Ship it.", "Sleep later."],
   },
@@ -88,8 +88,7 @@ function tipFor(id, body) {
   const tipY = body.y + body.height + 36;
   const tipX =
     body.x +
-    body.width *
-      (id === "lightning" ? 0.28 : id === "hook" ? 0.38 : id === "needle" ? 0.5 : 0.55);
+    body.width * (id === "lightning" ? 0.28 : id === "hook" ? 0.38 : id === "needle" ? 0.5 : 0.55);
   return { tipX, tipY };
 }
 
@@ -134,9 +133,7 @@ for (const id of REF_SHAPE_IDS) {
     mouth = { x: tipX, y: tipY };
   } else {
     const content =
-      phrase.mode === "wrap"
-        ? { en: { text: phrase.text } }
-        : { en: { lines: phrase.lines } };
+      phrase.mode === "wrap" ? { en: { text: phrase.text } } : { en: { lines: phrase.lines } };
     item = {
       kind: "balloon",
       id: `${id}-B01`,

@@ -63,9 +63,7 @@ describe("renderPage", () => {
     const m = load("fixtures/missing-locale.json");
     const r = renderPage(m, { locale: "ru", profileId: PROFILE_ID });
     expect(r.svg).toBeNull();
-    expect(r.diagnostics.diagnostics.some((d) => d.code === "LOCALE_MISSING")).toBe(
-      true,
-    );
+    expect(r.diagnostics.diagnostics.some((d) => d.code === "LOCALE_MISSING")).toBe(true);
   });
 
   test("single integrated balloon path — no separate tail/body strokes", () => {
@@ -118,9 +116,7 @@ describe("renderPage", () => {
       },
     ];
     const r = renderPage(m, { locale: "en", profileId: PROFILE_ID });
-    expect(r.diagnostics.diagnostics.some((d) => d.code === "SCHEMA_INVALID")).toBe(
-      true,
-    );
+    expect(r.diagnostics.diagnostics.some((d) => d.code === "SCHEMA_INVALID")).toBe(true);
     expect(r.svg).toBeNull();
   });
 });

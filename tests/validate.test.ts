@@ -44,9 +44,7 @@ describe("validatePage", () => {
     const m = load("fixtures/hard-overlap.json");
     const r = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(r.valid).toBe(false);
-    expect(r.diagnostics.some((d) => d.code === "HARD_EXCLUSION_OVERLAP")).toBe(
-      true,
-    );
+    expect(r.diagnostics.some((d) => d.code === "HARD_EXCLUSION_OVERLAP")).toBe(true);
   });
 
   test("speech jagged fixture validates — no UNKNOWN_SHAPE", () => {

@@ -80,7 +80,9 @@ async function main() {
       const report = validatePage(manifest, { locale, profileId });
       writeDiagnostics(flags.diagnostics, report);
       if (!report.valid) {
-        console.error(`Validation failed (${report.diagnostics.filter((d) => d.level === "error").length} errors)`);
+        console.error(
+          `Validation failed (${report.diagnostics.filter((d) => d.level === "error").length} errors)`,
+        );
         process.exit(1);
       }
       console.log(`OK ${report.pageId ?? ""}`.trim());
@@ -97,7 +99,7 @@ async function main() {
       }
       try {
         writeFileSync(resolve(flags.output), result.svg, "utf8");
-      } catch (e) {
+      } catch {
         console.error(`Cannot write SVG: ${flags.output}`);
         process.exit(2);
       }
@@ -117,7 +119,7 @@ async function main() {
         const png = await compositeProof(result.svg, resolve(flags.art));
         writeFileSync(resolve(flags.output), png);
       } catch (e) {
-        console.error(`Proof compositing failed: ${e instanceof Error ? e.message : e}`);
+        console.error(`Proof compositing failed: ${e instanceof Error ? e.message : String(e)}`);
         process.exit(2);
       }
       console.log(`Wrote ${flags.output}`);
@@ -126,9 +128,9 @@ async function main() {
 
     usage();
   } catch (e) {
-    console.error("Internal error:", e instanceof Error ? e.message : e);
+    console.error("Internal error:", e instanceof Error ? e.message : String(e));
     process.exit(3);
   }
 }
 
-main();
+void main();

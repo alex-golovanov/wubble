@@ -100,9 +100,7 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "radius 0"
-          ]
+          "lines": ["radius 0"]
         }
       }
     },
@@ -131,9 +129,7 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "radius mid"
-          ]
+          "lines": ["radius mid"]
         }
       }
     },
@@ -162,9 +158,7 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "radius 1"
-          ]
+          "lines": ["radius 1"]
         }
       }
     },
@@ -193,9 +187,7 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "robot edgy"
-          ]
+          "lines": ["robot edgy"]
         }
       }
     }

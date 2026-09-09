@@ -24,7 +24,7 @@ export interface SpeechInput {
 }
 
 export function buildSpeech(input: SpeechInput): ShapeGeometry {
-  const shape = PROFILE.shapes["speech"];
+  const shape = PROFILE.shapes.speech;
   const bodies = [input.body, ...(input.lobeBodies ?? [])];
   const path = buildRoundedBalloonPath({
     bodies,

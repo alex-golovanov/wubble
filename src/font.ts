@@ -53,11 +53,7 @@ export function measureWidth(text: string, fontSize: number): number {
  * Preserves explicit newlines in the source string.
  * Returns null if a single unbreakable token exceeds maxWidth.
  */
-export function wrapText(
-  text: string,
-  fontSize: number,
-  maxWidth: number,
-): string[] | null {
+export function wrapText(text: string, fontSize: number, maxWidth: number): string[] | null {
   const paragraphs = text.split(/\n/);
   const lines: string[] = [];
   for (const para of paragraphs) {
@@ -90,5 +86,5 @@ export function wrapText(
 }
 
 export function lineHeightPx(fontSize: number): number {
-  return roundN(fontSize * PROFILE.shapes["speech"].lineHeightFactor);
+  return roundN(fontSize * PROFILE.shapes.speech.lineHeightFactor);
 }

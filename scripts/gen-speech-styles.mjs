@@ -9,7 +9,12 @@ const outDir = join(root, "demo-out/gallery");
 mkdirSync(outDir, { recursive: true });
 const BG = "#f3efe6";
 
-function baseManifest(pageId, itemExtra, lines, placement = { x: 460, y: 340, width: 420, height: 220 }) {
+function baseManifest(
+  pageId,
+  itemExtra,
+  lines,
+  placement = { x: 460, y: 340, width: 420, height: 220 },
+) {
   return {
     schemaVersion: "0.1.0",
     pageId,
@@ -109,17 +114,11 @@ const composites = cells.map((c, i) => ({
   left: pad + i * (cellW + gap),
   top: pad + labelH,
 }));
-await sharp(base)
-  .composite(composites)
-  .png()
-  .toFile(join(outDir, "speech-styles-strip.png"));
+await sharp(base).composite(composites).png().toFile(join(outDir, "speech-styles-strip.png"));
 console.log("wrote speech-styles-strip.png");
 
 // Stress: longer copy, soft vs square side-by-side (same lines + placement).
-const STRESS_LINES = [
-  "Signal locked. Replay ready.",
-  "We keep moving through the static.",
-];
+const STRESS_LINES = ["Signal locked. Replay ready.", "We keep moving through the static."];
 const stressVariants = [
   {
     name: "stress-soft",

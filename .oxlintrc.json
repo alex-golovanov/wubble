@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "typescript/dot-notation": "error"
+  },
+  "ignorePatterns": [
+    "node_modules/**",
+    "demo-out/**",
+    "gallery/**",
+    "coverage/**",
+    "dist/**",
+    "tmp/**",
+    "**/*.lock"
+  ],
+  "env": {
+    "builtin": true
+  }
+}

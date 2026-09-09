@@ -10,9 +10,7 @@ const root = join(import.meta.dir, "..");
 
 describe("example page-022", () => {
   test("validates against bundled schema 0.1.0", () => {
-    const m = JSON.parse(
-      readFileSync(join(root, "examples/page-022.json"), "utf8"),
-    );
+    const m = JSON.parse(readFileSync(join(root, "examples/page-022.json"), "utf8"));
     const r = validateSchema(m);
     expect(r.ok).toBe(true);
     expect(r.manifest?.schemaVersion).toBe("0.1.0");
@@ -25,9 +23,7 @@ describe("example page-022", () => {
   });
 
   test("smoke: en render succeeds", () => {
-    const m = JSON.parse(
-      readFileSync(join(root, "examples/page-022.json"), "utf8"),
-    );
+    const m = JSON.parse(readFileSync(join(root, "examples/page-022.json"), "utf8"));
     const v = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(v.valid).toBe(true);
     const r = renderPage(m, { locale: "en", profileId: PROFILE_ID });

@@ -54,16 +54,10 @@
       },
       "content": {
         "en": {
-          "lines": [
-            "Signal",
-            "breaking—"
-          ]
+          "lines": ["Signal", "breaking—"]
         },
         "ru": {
-          "lines": [
-            "Сигнал",
-            "срывается—"
-          ]
+          "lines": ["Сигнал", "срывается—"]
         }
       },
       "cornerRadius": 0,

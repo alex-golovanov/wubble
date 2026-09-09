@@ -1,10 +1,18 @@
 import { buildSpeech } from "../src/shapes/speech";
 const body = { x: 930, y: 1110, width: 560, height: 300 };
 const tip = { x: 1225, y: 1685 };
-const g = buildSpeech({ body, tip, bend: { x: 1260, y: 1490 }, attachment: "bottom", cornerRadius: 1, edge: "smooth" });
+const g = buildSpeech({
+  body,
+  tip,
+  bend: { x: 1260, y: 1490 },
+  attachment: "bottom",
+  cornerRadius: 1,
+  edge: "smooth",
+});
 const re = /C\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)/g;
 const cubics = [...g.path.matchAll(re)];
-const dive = cubics[5], ret = cubics[6];
+const dive = cubics[5],
+  ret = cubics[6];
 const midDive = { x: +dive[3], y: +dive[4] };
 const midRet = { x: +ret[1], y: +ret[2] };
 console.log("midW", Math.hypot(midDive.x - midRet.x, midDive.y - midRet.y).toFixed(1));
