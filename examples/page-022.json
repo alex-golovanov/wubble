@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/page.schema.json",
+  "schemaVersion": "0.1.0",
+  "pageId": "P022",
+  "coordinateSpace": {
+    "width": 1800,
+    "height": 2700,
+    "origin": "top-left",
+    "units": "art-px"
+  },
+  "renderProfile": {
+    "id": "rift-city-proof",
+    "version": "0.1.0"
+  },
+  "subjects": [
+    {
+      "id": "lex",
+      "bounds": { "x": 1090, "y": 1510, "width": 360, "height": 790 },
+      "anchors": {
+        "mouth": { "x": 1225, "y": 1685 }
+      }
+    },
+    {
+      "id": "glitch",
+      "bounds": { "x": 370, "y": 1710, "width": 430, "height": 470 },
+      "anchors": {
+        "playback": { "x": 590, "y": 1800 }
+      }
+    }
+  ],
+  "exclusionZones": [
+    {
+      "id": "lex-face",
+      "bounds": { "x": 1135, "y": 1570, "width": 190, "height": 215 },
+      "severity": "hard"
+    },
+    {
+      "id": "glitch-lens",
+      "bounds": { "x": 480, "y": 1760, "width": 190, "height": 155 },
+      "severity": "hard"
+    }
+  ],
+  "items": [
+    {
+      "kind": "balloon",
+      "id": "P022-02-B01",
+      "panelId": "P022-02",
+      "speakerId": "lex",
+      "shapeId": "human-01",
+      "placement": { "x": 930, "y": 1110, "width": 560, "height": 300 },
+      "tail": {
+        "subjectId": "lex",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": { "x": 1260, "y": 1490 }
+      },
+      "content": {
+        "en": { "lines": ["We keep", "moving."] },
+        "ru": { "lines": ["Продолжаем", "двигаться."] }
+      },
+      "localeOverrides": {
+        "ru": {
+          "placement": { "x": 855, "y": 1080, "width": 650, "height": 330 },
+          "tailBend": { "x": 1245, "y": 1490 }
+        }
+      }
+    },
+    {
+      "kind": "silent",
+      "id": "P022-04-S01",
+      "panelId": "P022-04",
+      "speakerId": "glitch"
+    }
+  ]
+}

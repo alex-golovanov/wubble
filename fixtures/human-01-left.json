@@ -1,0 +1,32 @@
+{
+  "$schema": "../schemas/page.schema.json",
+  "schemaVersion": "0.1.0",
+  "pageId": "H01-left",
+  "coordinateSpace": { "width": 1200, "height": 900, "origin": "top-left", "units": "art-px" },
+  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "subjects": [
+    { "id": "spk", "bounds": { "x": 500, "y": 700, "width": 120, "height": 120 },
+      "anchors": { "mouth": {"x":80,"y":420} } }
+  ],
+  "exclusionZones": [],
+  "items": [
+    {
+      "kind": "balloon",
+      "id": "H-left",
+      "panelId": "P1",
+      "speakerId": "spk",
+      "shapeId": "human-01",
+      "placement": {"x":360,"y":240,"width":560,"height":280},
+      "tail": {
+        "subjectId": "spk",
+        "anchor": "mouth",
+        "attachment": "left",
+        "bend": {"x":260,"y":440}
+      },
+      "content": {
+        "en": { "lines": ["Tip left", "hook check"] },
+        "ru": { "lines": ["Хвост left", "проверка"] }
+      }
+    }
+  ]
+}

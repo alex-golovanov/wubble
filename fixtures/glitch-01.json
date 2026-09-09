@@ -1,0 +1,40 @@
+{
+  "$schema": "../schemas/page.schema.json",
+  "schemaVersion": "0.1.0",
+  "pageId": "G01",
+  "coordinateSpace": {
+    "width": 1200,
+    "height": 900,
+    "origin": "top-left",
+    "units": "art-px"
+  },
+  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "subjects": [
+    {
+      "id": "rec",
+      "bounds": { "x": 480, "y": 620, "width": 200, "height": 180 },
+      "anchors": { "playback": { "x": 580, "y": 640 } }
+    }
+  ],
+  "exclusionZones": [],
+  "items": [
+    {
+      "kind": "balloon",
+      "id": "G01-B01",
+      "panelId": "G01-P1",
+      "speakerId": "rec",
+      "shapeId": "glitch-01",
+      "placement": { "x": 320, "y": 180, "width": 520, "height": 260 },
+      "tail": {
+        "subjectId": "rec",
+        "anchor": "playback",
+        "attachment": "bottom",
+        "bend": { "x": 560, "y": 500 }
+      },
+      "content": {
+        "en": { "lines": ["Recording", "playback"] },
+        "ru": { "lines": ["Запись", "воспроизведения"] }
+      }
+    }
+  ]
+}

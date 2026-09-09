@@ -1,0 +1,32 @@
+{
+  "name": "wubble",
+  "version": "0.1.0",
+  "description": "Deterministic comic-lettering engine — bilingual SVG overlays from page manifests",
+  "type": "module",
+  "bin": {
+    "wubble": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "wubble": "bun run src/cli.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "validate:example": "bun run src/cli.ts validate examples/page-022.json"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "opentype.js": "^1.3.4",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/opentype.js": "^1.3.8",
+    "typescript": "^5.8.3"
+  }
+}

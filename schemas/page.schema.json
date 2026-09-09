@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wubble:schema:page:0.1.0",
+  "title": "Wubble page manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "pageId",
+    "coordinateSpace",
+    "renderProfile",
+    "subjects",
+    "exclusionZones",
+    "items"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "0.1.0"
+    },
+    "pageId": {
+      "$ref": "#/$defs/id"
+    },
+    "coordinateSpace": {
+      "$ref": "#/$defs/coordinateSpace"
+    },
+    "renderProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "subjects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/subject"
+      }
+    },
+    "exclusionZones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exclusionZone"
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/balloon"
+          },
+          {
+            "$ref": "#/$defs/silent"
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "coordinateSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "origin",
+        "units"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "origin": {
+          "const": "top-left"
+        },
+        "units": {
+          "const": "art-px"
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bounds",
+        "anchors"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "bounds": {
+          "$ref": "#/$defs/bounds"
+        },
+        "anchors": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "exclusionZone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bounds",
+        "severity"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "bounds": {
+          "$ref": "#/$defs/bounds"
+        },
+        "severity": {
+          "enum": [
+            "hard",
+            "soft"
+          ]
+        }
+      }
+    },
+    "localeContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "sourceLabel": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "text"
+          ],
+          "not": {
+            "required": [
+              "lines"
+            ]
+          }
+        },
+        {
+          "required": [
+            "lines"
+          ],
+          "not": {
+            "required": [
+              "text"
+            ]
+          }
+        }
+      ]
+    },
+    "tail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectId",
+        "anchor",
+        "attachment"
+      ],
+      "properties": {
+        "subjectId": {
+          "$ref": "#/$defs/id"
+        },
+        "anchor": {
+          "$ref": "#/$defs/id"
+        },
+        "attachment": {
+          "enum": [
+            "top",
+            "right",
+            "bottom",
+            "left",
+            "auto"
+          ]
+        },
+        "bend": {
+          "$ref": "#/$defs/point"
+        }
+      }
+    },
+    "localeOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "placement": {
+          "$ref": "#/$defs/bounds"
+        },
+        "tailBend": {
+          "$ref": "#/$defs/point"
+        }
+      }
+    },
+    "balloon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "panelId",
+        "speakerId",
+        "shapeId",
+        "placement",
+        "content"
+      ],
+      "properties": {
+        "kind": {
+          "const": "balloon"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "panelId": {
+          "$ref": "#/$defs/id"
+        },
+        "speakerId": {
+          "$ref": "#/$defs/id"
+        },
+        "shapeId": {
+          "enum": [
+            "human-01",
+            "glitch-01",
+            "glitch-breaking-01",
+            "ref-01",
+            "ref-02",
+            "ref-03",
+            "ref-04",
+            "ref-05",
+            "ref-06",
+            "ref-07",
+            "ref-08",
+            "ref-09"
+          ]
+        },
+        "placement": {
+          "$ref": "#/$defs/bounds"
+        },
+        "tail": {
+          "$ref": "#/$defs/tail"
+        },
+        "content": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/localeContent"
+          }
+        },
+        "localeOverrides": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/localeOverride"
+          }
+        },
+        "cornerRadius": {
+          "$ref": "#/$defs/cornerRadius"
+        },
+        "edge": {
+          "$ref": "#/$defs/edgeStyle"
+        },
+        "lobes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/balloonLobe"
+          },
+          "description": "Additional lobes chained with placement into one open silhouette."
+        }
+      }
+    },
+    "silent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "panelId",
+        "speakerId"
+      ],
+      "properties": {
+        "kind": {
+          "const": "silent"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "panelId": {
+          "$ref": "#/$defs/id"
+        },
+        "speakerId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "edgeStyle": {
+      "type": "string",
+      "enum": [
+        "smooth",
+        "jagged"
+      ],
+      "description": "Outline treatment. smooth = comic curves; jagged = angular/robot edgy."
+    },
+    "cornerRadius": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0..1 \u00d7 min(body.w, body.h)/2. 0 = sharp rect, 1 = full pill."
+    },
+    "balloonLobe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "placement",
+        "content"
+      ],
+      "description": "Extra lobe fused into a chained multi-bubble silhouette.",
+      "properties": {
+        "placement": {
+          "$ref": "#/$defs/bounds"
+        },
+        "content": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/localeContent"
+          }
+        }
+      }
+    }
+  }
+}

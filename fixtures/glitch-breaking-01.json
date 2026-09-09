@@ -1,0 +1,40 @@
+{
+  "$schema": "../schemas/page.schema.json",
+  "schemaVersion": "0.1.0",
+  "pageId": "GB01",
+  "coordinateSpace": {
+    "width": 1200,
+    "height": 900,
+    "origin": "top-left",
+    "units": "art-px"
+  },
+  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "subjects": [
+    {
+      "id": "rec",
+      "bounds": { "x": 480, "y": 620, "width": 200, "height": 180 },
+      "anchors": { "playback": { "x": 580, "y": 640 } }
+    }
+  ],
+  "exclusionZones": [],
+  "items": [
+    {
+      "kind": "balloon",
+      "id": "GB01-B01",
+      "panelId": "GB01-P1",
+      "speakerId": "rec",
+      "shapeId": "glitch-breaking-01",
+      "placement": { "x": 300, "y": 160, "width": 560, "height": 280 },
+      "tail": {
+        "subjectId": "rec",
+        "anchor": "playback",
+        "attachment": "bottom",
+        "bend": { "x": 540, "y": 480 }
+      },
+      "content": {
+        "en": { "lines": ["Signal", "breaking—"] },
+        "ru": { "lines": ["Сигнал", "срывается—"] }
+      }
+    }
+  ]
+}

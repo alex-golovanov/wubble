@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Build / coverage
+dist/
+build/
+out/
+coverage/
+
+# Project outputs
+demo-out/
+gallery/
+tmp/
+
+# Generated assets
+*.proof.png
+*.overlay.svg
+page-*.en.svg
+page-*.ru.svg
+
+# Logs
+*.log
+npm-debug.log*
+bun-debug.log*
+
+# Extra local trash
+**/gallery/
+*.proof.svg
+*.en.svg
+*.ru.svg
+check.*.svg
+app.*.svg
+app.*.png
+*-balloon*.png
+*-full.png
+ref-*.png
+user-ref*.png
+.tmp/
+*~
+*.code-workspace

@@ -1,0 +1,69 @@
+{
+  "$schema": "../schemas/page.schema.json",
+  "schemaVersion": "0.1.0",
+  "pageId": "MULTI",
+  "coordinateSpace": {
+    "width": 1600,
+    "height": 1200,
+    "origin": "top-left",
+    "units": "art-px"
+  },
+  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "subjects": [
+    {
+      "id": "a",
+      "bounds": { "x": 200, "y": 900, "width": 160, "height": 160 },
+      "anchors": { "mouth": { "x": 280, "y": 920 } }
+    },
+    {
+      "id": "b",
+      "bounds": { "x": 1100, "y": 880, "width": 160, "height": 180 },
+      "anchors": { "mouth": { "x": 1180, "y": 900 } }
+    }
+  ],
+  "exclusionZones": [],
+  "items": [
+    {
+      "kind": "balloon",
+      "id": "M-B01",
+      "panelId": "M-P1",
+      "speakerId": "a",
+      "shapeId": "human-01",
+      "placement": { "x": 120, "y": 200, "width": 480, "height": 260 },
+      "tail": {
+        "subjectId": "a",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": { "x": 260, "y": 560 }
+      },
+      "content": {
+        "en": { "lines": ["Left side", "speaking."] },
+        "ru": { "lines": ["Слева", "говорим."] }
+      }
+    },
+    {
+      "kind": "balloon",
+      "id": "M-B02",
+      "panelId": "M-P1",
+      "speakerId": "b",
+      "shapeId": "human-01",
+      "placement": { "x": 980, "y": 220, "width": 480, "height": 260 },
+      "tail": {
+        "subjectId": "b",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": { "x": 1200, "y": 560 }
+      },
+      "content": {
+        "en": { "lines": ["Right side", "answers."] },
+        "ru": { "lines": ["Справа", "отвечаем."] }
+      }
+    },
+    {
+      "kind": "silent",
+      "id": "M-S01",
+      "panelId": "M-P2",
+      "speakerId": "a"
+    }
+  ]
+}

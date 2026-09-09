@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "0.1.0",
+  "pageId": "CORNERS",
+  "coordinateSpace": {
+    "width": 2000,
+    "height": 900,
+    "origin": "top-left",
+    "units": "art-px"
+  },
+  "renderProfile": {
+    "id": "rift-city-proof",
+    "version": "0.1.0"
+  },
+  "subjects": [
+    {
+      "id": "s0",
+      "bounds": {
+        "x": 180,
+        "y": 720,
+        "width": 80,
+        "height": 60
+      },
+      "anchors": {
+        "mouth": {
+          "x": 220,
+          "y": 730
+        }
+      }
+    },
+    {
+      "id": "s1",
+      "bounds": {
+        "x": 620,
+        "y": 720,
+        "width": 80,
+        "height": 60
+      },
+      "anchors": {
+        "mouth": {
+          "x": 660,
+          "y": 730
+        }
+      }
+    },
+    {
+      "id": "s2",
+      "bounds": {
+        "x": 1060,
+        "y": 720,
+        "width": 80,
+        "height": 60
+      },
+      "anchors": {
+        "mouth": {
+          "x": 1100,
+          "y": 730
+        }
+      }
+    },
+    {
+      "id": "s3",
+      "bounds": {
+        "x": 1600,
+        "y": 720,
+        "width": 80,
+        "height": 60
+      },
+      "anchors": {
+        "mouth": {
+          "x": 1640,
+          "y": 730
+        }
+      }
+    }
+  ],
+  "exclusionZones": [],
+  "items": [
+    {
+      "kind": "balloon",
+      "id": "C-R0",
+      "panelId": "P1",
+      "speakerId": "s0",
+      "shapeId": "human-01",
+      "cornerRadius": 0,
+      "edge": "smooth",
+      "placement": {
+        "x": 80,
+        "y": 100,
+        "width": 300,
+        "height": 180
+      },
+      "tail": {
+        "subjectId": "s0",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": {
+          "x": 220,
+          "y": 400
+        }
+      },
+      "content": {
+        "en": {
+          "lines": [
+            "radius 0"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "balloon",
+      "id": "C-R5",
+      "panelId": "P1",
+      "speakerId": "s1",
+      "shapeId": "human-01",
+      "cornerRadius": 0.45,
+      "edge": "smooth",
+      "placement": {
+        "x": 520,
+        "y": 100,
+        "width": 300,
+        "height": 180
+      },
+      "tail": {
+        "subjectId": "s1",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": {
+          "x": 660,
+          "y": 400
+        }
+      },
+      "content": {
+        "en": {
+          "lines": [
+            "radius mid"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "balloon",
+      "id": "C-R1",
+      "panelId": "P1",
+      "speakerId": "s2",
+      "shapeId": "human-01",
+      "cornerRadius": 1,
+      "edge": "smooth",
+      "placement": {
+        "x": 960,
+        "y": 100,
+        "width": 300,
+        "height": 180
+      },
+      "tail": {
+        "subjectId": "s2",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": {
+          "x": 1100,
+          "y": 400
+        }
+      },
+      "content": {
+        "en": {
+          "lines": [
+            "radius 1"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "balloon",
+      "id": "C-JAG",
+      "panelId": "P1",
+      "speakerId": "s3",
+      "shapeId": "human-01",
+      "cornerRadius": 0,
+      "edge": "jagged",
+      "placement": {
+        "x": 1520,
+        "y": 100,
+        "width": 280,
+        "height": 180
+      },
+      "tail": {
+        "subjectId": "s3",
+        "anchor": "mouth",
+        "attachment": "bottom",
+        "bend": {
+          "x": 1640,
+          "y": 400
+        }
+      },
+      "content": {
+        "en": {
+          "lines": [
+            "robot edgy"
+          ]
+        }
+      }
+    }
+  ]
+}

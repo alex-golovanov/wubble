@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760">
+  <title>human-01 candidate</title>
+  <desc>A warm, softly irregular hand-drawn comic speech balloon with one integrated curved tail.</desc>
+  <path
+    d="M 125 340
+       C 116 230, 184 139, 326 96
+       C 487 48, 721 58, 899 101
+       C 1046 136, 1110 225, 1092 347
+       C 1077 452, 996 518, 858 551
+       C 730 581, 581 579, 477 557
+       C 428 631, 351 691, 251 720
+       C 320 658, 362 601, 384 535
+       C 235 511, 140 447, 125 340 Z"
+    fill="#fffaf0"
+    stroke="#241f1a"
+    stroke-width="12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
