@@ -1,7 +1,13 @@
 import { missingGlyphs, measureWidth, wrapText, lineHeightPx } from "./font";
 import { roundN } from "./normalize";
-import { shapeProfile } from "./profile";
-import { isRefShapeId, refContentBand, contentBandBox, type ContentBand } from "./shapes/ref-sheet";
+import { PROFILE, shapeProfile } from "./profile";
+import {
+  isRefShapeId,
+  refContentBand,
+  contentBandBox,
+  type ContentBand,
+  type RefShapeId,
+} from "./shapes/ref-sheet";
 import {
   contentInsetsForRoundedBody,
   defaultCornerRadius,
@@ -18,6 +24,43 @@ export interface LayoutResult {
 function contentString(content: LocaleContent): string {
   if (content.lines) return content.lines.join("\n");
   return content.text ?? "";
+}
+
+type TextMetrics = Pick<FittedText, "contentWidth" | "contentHeight" | "sourceLabel">;
+
+function measureContent(
+  lines: string[],
+  fontSize: number,
+  lineHeight: number,
+  sourceLabel: string | undefined,
+): TextMetrics {
+  const dialogueWidth = roundN(Math.max(...lines.map((line) => measureWidth(line, fontSize)), 0));
+  const dialogueHeight = roundN(lines.length * lineHeight);
+  if (!sourceLabel) {
+    return { contentWidth: dialogueWidth, contentHeight: dialogueHeight };
+  }
+
+  const typography = PROFILE.typography;
+  const labelFontSize = roundN(
+    Math.min(
+      typography.sourceLabelMaxFontSize,
+      Math.max(typography.sourceLabelMinFontSize, fontSize * typography.sourceLabelScale),
+    ),
+  );
+  const labelLineHeight = lineHeightPx(labelFontSize);
+  const labelWidth = measureWidth(sourceLabel, labelFontSize);
+  const gapAfter = roundN(labelFontSize * typography.sourceLabelGapFactor);
+  return {
+    contentWidth: roundN(Math.max(dialogueWidth, labelWidth)),
+    contentHeight: roundN(labelLineHeight + gapAfter + dialogueHeight),
+    sourceLabel: {
+      text: sourceLabel,
+      fontSize: labelFontSize,
+      lineHeight: labelLineHeight,
+      contentWidth: labelWidth,
+      gapAfter,
+    },
+  };
 }
 
 /**
@@ -88,61 +131,36 @@ function minExpandForBand(
   placement: Bounds,
   contentW: number,
   contentH: number,
-  shapeId: ShapeId,
+  shapeId: RefShapeId,
   band: ContentBand,
   maxExpand: number,
 ): number | null {
   const shape = shapeProfile(shapeId);
-  const pw = placement.width;
-  const ph = placement.height;
-  const bandFracH = band.bottom - band.top;
-  const bandFracW = (band.right ?? 1) - (band.left ?? 0);
-  if (bandFracH <= 0.05 || bandFracW <= 0.05) return null;
   const usable = shape.usableWidthFactor ?? 1;
-  // Demand a wider band so text uses only `usable` of the padded column.
-  contentW = contentW / Math.max(0.5, usable);
+  const fitsAt = (expand: number): boolean => {
+    const body: Bounds = {
+      x: placement.x,
+      y: placement.y,
+      width: placement.width * expand,
+      height: placement.height * expand,
+    };
+    const textBand = contentBandBox(body, band, shapeId);
+    const { padX, padY } = resolveShapePadding(shapeId, textBand.width, textBand.height);
+    const maxTextW = (textBand.width - padX * 2) * usable;
+    const maxTextH = textBand.height - padY * 2;
+    return maxTextW > 0 && maxTextH > 0 && contentW <= maxTextW && contentH <= maxTextH;
+  };
 
-  const floorX = Math.max(shape.paddingX, shape.strokeWidth * 1.5);
-  const floorY = Math.max(shape.paddingY, shape.strokeWidth * 1.5);
-  const ratio = shape.paddingRatio ?? 0;
-
-  // bandW = pw*e*bandFracW, bandH = ph*e*bandFracH
-  let e = 1;
-  e = Math.max(
-    e,
-    (contentW + 2 * floorX) / (pw * bandFracW),
-    (contentH + 2 * floorY) / (ph * bandFracH),
-  );
-
-  if (ratio > 0) {
-    // pad ≈ ratio * min(bandW, bandH) = ratio * e * min(pw*bandFracW, ph*bandFracH)
-    const m = Math.min(pw * bandFracW, ph * bandFracH);
-    const denomW = pw * bandFracW - 2 * ratio * m;
-    const denomH = ph * bandFracH - 2 * ratio * m;
-    if (denomW <= 1 || denomH <= 1) return null;
-    e = Math.max(e, contentW / denomW, contentH / denomH);
+  if (fitsAt(1)) return 1;
+  if (!fitsAt(maxExpand)) return null;
+  let low = 1;
+  let high = maxExpand;
+  for (let i = 0; i < 24; i++) {
+    const mid = (low + high) / 2;
+    if (fitsAt(mid)) high = mid;
+    else low = mid;
   }
-
-  for (let i = 0; i < 8; i++) {
-    const bodyW = pw * e;
-    const bodyH = ph * e;
-    const bandW = bodyW * bandFracW;
-    const bandH = bodyH * bandFracH;
-    const { padX, padY } = resolveShapePadding(shapeId, bandW, bandH);
-    const needE = Math.max(
-      (contentW + 2 * padX) / (pw * bandFracW),
-      (contentH + 2 * padY) / (ph * bandFracH),
-      1,
-    );
-    if (needE <= e + 1e-6) break;
-    e = needE;
-  }
-
-  if (e > maxExpand + 1e-6) return null;
-  // Small slack so pad/rounding does not razor-edge the post-fit width check.
-  const withSlack = e * 1.02;
-  if (withSlack > maxExpand + 1e-6) return roundN(maxExpand);
-  return roundN(Math.min(Math.max(withSlack, 1), maxExpand));
+  return roundN(Math.min(maxExpand, high * 1.01));
 }
 
 /**
@@ -161,7 +179,8 @@ export function fitBalloonText(
   const diagnostics: Diagnostic[] = [];
   const raw = contentString(content);
 
-  const missing = missingGlyphs(raw.replace(/\n/g, ""));
+  const glyphInput = `${content.sourceLabel ?? ""}${raw.replace(/\n/g, "")}`;
+  const missing = missingGlyphs(glyphInput);
   if (missing.length > 0) {
     diagnostics.push(
       diag("GLYPH_MISSING", `Missing glyphs: ${missing.map((c) => JSON.stringify(c)).join(", ")}`, {
@@ -181,18 +200,22 @@ export function fitBalloonText(
 
   const useRatio = (shape.paddingRatio ?? 0) > 0;
   // Lobe sub-fits already receive the lettering box; do not re-apply template bands.
-  const band = isRefShapeId(shapeId) && !itemId.includes("#lobe") ? refContentBand(shapeId) : null;
+  const refShapeId = isRefShapeId(shapeId) ? shapeId : null;
+  const band = refShapeId && !itemId.includes("#lobe") ? refContentBand(refShapeId) : null;
 
   for (const fontSize of fontSizes) {
-    if (useRatio && band) {
-      const bandFracH = band.bottom - band.top;
-      const bandFracW = (band.right ?? 1) - (band.left ?? 0);
+    if (useRatio && band && refShapeId) {
       const probeE = Math.min(1.4, shape.maxExpandFactor);
-      const probeBandH = placement.height * probeE * bandFracH;
-      const probeBandW = placement.width * probeE * bandFracW;
-      const probePad = resolveShapePadding(shapeId, probeBandW, probeBandH);
+      const probeBody: Bounds = {
+        x: placement.x,
+        y: placement.y,
+        width: placement.width * probeE,
+        height: placement.height * probeE,
+      };
+      const probeBand = contentBandBox(probeBody, band, refShapeId);
+      const probePad = resolveShapePadding(shapeId, probeBand.width, probeBand.height);
       const usable = shape.usableWidthFactor ?? 1;
-      const probeMaxW = Math.max(8, (probeBandW - probePad.padX * 2) * usable);
+      const probeMaxW = Math.max(8, (probeBand.width - probePad.padX * 2) * usable);
 
       let lines: string[] | null;
       if (authoredLines) {
@@ -204,14 +227,14 @@ export function fitBalloonText(
       if (lines.length > shape.maxLines) continue;
 
       const lh = lineHeightPx(fontSize);
-      const contentHeight = roundN(lines.length * lh);
-      const contentWidth = roundN(Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0));
+      const metrics = measureContent(lines, fontSize, lh, content.sourceLabel);
+      const { contentWidth, contentHeight } = metrics;
 
       const e = minExpandForBand(
         placement,
         contentWidth,
         contentHeight,
-        shapeId,
+        refShapeId,
         band,
         shape.maxExpandFactor,
       );
@@ -225,7 +248,7 @@ export function fitBalloonText(
         width: bodyW,
         height: bodyH,
       };
-      const textBand = contentBandBox(body, band);
+      const textBand = contentBandBox(body, band, refShapeId);
       const { padX, padY } = resolveShapePadding(shapeId, textBand.width, textBand.height);
       const maxTextW = (textBand.width - padX * 2) * usable;
       const maxTextH = textBand.height - padY * 2;
@@ -249,6 +272,7 @@ export function fitBalloonText(
           lineHeight: lh,
           contentWidth,
           contentHeight,
+          ...(metrics.sourceLabel ? { sourceLabel: metrics.sourceLabel } : {}),
           bodyBounds: body,
           textBounds: textBand,
         },
@@ -279,11 +303,9 @@ export function fitBalloonText(
         }
         if (lines && lines.length <= shape.maxLines) {
           const lh = lineHeightPx(fontSize);
-          const contentHeight = roundN(lines.length * lh);
+          const metrics = measureContent(lines, fontSize, lh, content.sourceLabel);
+          const { contentWidth, contentHeight } = metrics;
           if (contentHeight <= maxTextH) {
-            const contentWidth = roundN(
-              Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0),
-            );
             return {
               fitted: {
                 lines,
@@ -291,6 +313,7 @@ export function fitBalloonText(
                 lineHeight: lh,
                 contentWidth,
                 contentHeight,
+                ...(metrics.sourceLabel ? { sourceLabel: metrics.sourceLabel } : {}),
                 bodyBounds: {
                   x: placement.x,
                   y: placement.y,
@@ -345,10 +368,9 @@ export function fitBalloonText(
       if (lines.length > shape.maxLines) continue;
 
       const lh = lineHeightPx(fontSize);
-      const contentHeight = roundN(lines.length * lh);
+      const metrics = measureContent(lines, fontSize, lh, content.sourceLabel);
+      const { contentWidth, contentHeight } = metrics;
       if (contentHeight > maxTextH) continue;
-
-      const contentWidth = roundN(Math.max(...lines.map((l) => measureWidth(l, fontSize)), 0));
 
       return {
         fitted: {
@@ -357,6 +379,7 @@ export function fitBalloonText(
           lineHeight: lh,
           contentWidth,
           contentHeight,
+          ...(metrics.sourceLabel ? { sourceLabel: metrics.sourceLabel } : {}),
           bodyBounds: body,
         },
         diagnostics,

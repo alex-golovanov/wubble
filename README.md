@@ -95,7 +95,7 @@ Geometry is a single closed path with an **open tail join** (no crossbar cutting
 
 ## Font strategy
 
-Bundled **Noto Sans Regular** (OFL) at `assets/fonts/NotoSans-Regular.otf` (Latin + Cyrillic). Digested in the render profile. Text is measured with `opentype.js` from that exact file; the font is embedded as a base64 `@font-face` data URL in each SVG so overlays are self-contained and OS fonts are never consulted. Missing glyphs → `GLYPH_MISSING`.
+Bundled default **Noto Sans Regular** (OFL) at `assets/fonts/NotoSans-Regular.otf` (Latin + Cyrillic). Digested in the render profile. Additional font assets do not replace the default. Text is shaped and measured with `fontkit` from the configured file; the font is embedded as a base64 `@font-face` data URL in each SVG so overlays are self-contained and OS fonts are never consulted. Missing glyphs → `GLYPH_MISSING`.
 
 ## Status
 

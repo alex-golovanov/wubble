@@ -91,7 +91,7 @@ Stable identifier for the page (appears in diagnostics).
 { "id": "rift-city-proof", "version": "0.1.0" }
 ```
 
-Binds fill/stroke, padding, font, and fit limits from the compiled profile in `src/profile.ts`. The proof profile embeds **Noto Sans Regular** (Latin + Cyrillic) and digests the font bytes.
+Binds fill/stroke, padding, font, and fit limits from the compiled profile in `src/profile.ts`. The proof profile continues to embed **Noto Sans Regular** (Latin + Cyrillic) and digest the font bytes.
 
 ### `subjects` / `exclusionZones` / `items`
 
@@ -199,6 +199,8 @@ Optional `sourceLabel` for editorial notes (e.g. found-recording labels).
 ```
 
 Missing locale for the requested render → `LOCALE_MISSING`. Missing glyphs in the bundled font → `GLYPH_MISSING`.
+
+Optional `sourceLabel` is measured with the bundled font and rendered above the dialogue at the profile's smaller source-label size. Its width and height participate in balloon fitting.
 
 #### `localeOverrides`
 
@@ -320,7 +322,7 @@ Unknown / unimplemented shape → `UNKNOWN_SHAPE` (error). With the current prof
 
 Pipeline (simplified):
 
-1. **Measure** text with the exact bundled font (`opentype.js`).
+1. **Shape and measure** text with the exact bundled font (`fontkit`).
 2. Prefer keeping type large; **expand** the body (uniform factor) so text + padding fit.
 3. Only then **shrink** font size toward the profile minimum.
 4. Map the registered silhouette into the fitted body (rounded-rect builder or ref template).

@@ -3,8 +3,9 @@ import { resolveAnchor, resolveBend, resolvePlacement, validatePage } from "./va
 import { fitBalloonText, fitStyleOf, resolveLetteringPads } from "./layout";
 import { buildShape } from "./shapes/index";
 import { isRefShapeId, refLobeContentBand, contentBandBox } from "./shapes/ref-sheet";
-import { fontBase64, isShapeImplemented } from "./profile";
+import { fontBase64, isShapeImplemented, PROFILE } from "./profile";
 import { fmt } from "./normalize";
+import { fontVerticalMetrics } from "./font";
 import { hasErrors } from "./diagnostics";
 import type {
   BalloonItem,
@@ -36,15 +37,26 @@ function textNodesFor(
   const fs = fitted.fontSize;
   const lh = fitted.lineHeight;
   const textBlockH = fitted.contentHeight;
-  const startY = box.y + padY + (box.height - padY * 2 - textBlockH) / 2 + fs * 0.8;
+  const blockTop = box.y + padY + (box.height - padY * 2 - textBlockH) / 2;
   const midX = box.x + box.width / 2;
+  const nodes: string[] = [];
+  let dialogueTop = blockTop;
+  if (fitted.sourceLabel) {
+    const label = fitted.sourceLabel;
+    const labelBaseline = fontVerticalMetrics(label.fontSize).baselineOffset;
+    nodes.push(
+      `      <text data-part="source-label" x="${fmt(midX)}" y="${fmt(blockTop + labelBaseline)}" text-anchor="middle" font-family="${escapeXml(PROFILE.typography.fontFamily)}" font-size="${fmt(label.fontSize)}">${escapeXml(label.text)}</text>`,
+    );
+    dialogueTop += label.lineHeight + label.gapAfter;
+  }
   const lines = fitted.lines
     .map((line, i) => {
-      const y = startY + i * lh;
-      return `      <text x="${fmt(midX)}" y="${fmt(y)}" text-anchor="middle" font-family="Noto Sans" font-size="${fmt(fs)}">${escapeXml(line)}</text>`;
+      const y = dialogueTop + i * lh + fontVerticalMetrics(fs).baselineOffset;
+      return `      <text x="${fmt(midX)}" y="${fmt(y)}" text-anchor="middle" font-family="${escapeXml(PROFILE.typography.fontFamily)}" font-size="${fmt(fs)}">${escapeXml(line)}</text>`;
     })
     .join("\n");
-  return `    <g data-part="text" fill="${fill}">\n${lines}\n    </g>`;
+  nodes.push(lines);
+  return `    <g data-part="text" fill="${fill}">\n${nodes.join("\n")}\n    </g>`;
 }
 
 function renderBalloonGroup(
@@ -75,7 +87,7 @@ function renderBalloonGroup(
       if (isRefShapeId(item.shapeId)) {
         const lobeBand = refLobeContentBand(item.shapeId, i);
         if (lobeBand) {
-          lobePlacement = contentBandBox(body, lobeBand);
+          lobePlacement = contentBandBox(body, lobeBand, item.shapeId);
         }
       }
 
@@ -149,7 +161,7 @@ function serializeSvg(manifest: PageManifest, locale: string): string {
     `  <defs>`,
     `    <style type="text/css">`,
     `      @font-face {`,
-    `        font-family: "Noto Sans";`,
+    `        font-family: "${escapeXml(PROFILE.typography.fontFamily)}";`,
     `        font-style: normal;`,
     `        font-weight: 400;`,
     `        src: url("data:font/otf;base64,${b64}") format("opentype");`,

@@ -117,7 +117,7 @@ export const REF_TEMPLATES: Record<RefShapeId | "ref-cream-hook", RefTemplate> =
   rect: {
     alias: "rect",
     viewBox: [10, 133.08, 980, 733.84],
-    contentBand: { top: 0.16, bottom: 0.58 },
+    contentBand: { top: 0.16, bottom: 0.58, left: 0.08, right: 0.92 },
     path: "M 812.48 143.08 L 842.56 143.08 L 865.81 145.81 L 882.22 151.28 L 898.63 160.85 L 915.04 174.53 L 930.77 193.68 L 945.81 218.29 L 958.12 245.64 L 967.69 275.73 L 974.53 308.55 L 978.63 344.10 L 980.00 387.86 L 978.63 439.83 L 973.85 483.59 L 965.64 519.15 L 956.75 546.50 L 947.18 565.64 L 931.45 583.42 L 909.57 599.83 L 884.96 611.45 L 857.61 618.29 L 812.48 624.44 L 749.57 629.91 L 711.28 634.70 L 697.61 638.80 L 677.09 649.06 L 649.74 665.47 L 629.91 680.51 L 617.61 694.19 L 605.30 713.33 L 592.99 737.95 L 577.95 780.34 L 560.17 840.51 L 551.97 856.92 L 553.33 829.57 L 550.60 794.02 L 543.76 750.26 L 534.19 714.70 L 521.88 687.35 L 506.15 663.42 L 487.01 642.91 L 470.60 629.23 L 456.92 622.39 L 440.51 616.92 L 421.37 612.82 L 343.42 613.50 L 206.67 618.97 L 121.88 615.56 L 89.06 603.25 L 65.13 589.57 L 50.09 574.53 L 38.46 558.80 L 30.26 542.39 L 24.10 521.88 L 20.00 497.26 L 20.00 463.08 L 24.10 419.32 L 29.57 385.13 L 36.41 360.51 L 45.98 335.90 L 58.29 311.28 L 74.02 288.72 L 93.16 268.21 L 116.41 251.79 L 143.76 239.49 L 206.67 223.08 L 305.13 202.56 L 465.13 180.00 L 686.67 155.38 Z",
   },
   "ref-cream-hook": {
@@ -204,13 +204,31 @@ export function refLobeContentBand(shapeId: RefShapeId, lobeIndex: number): Cont
 }
 
 /** Map a content band onto a fitted frame as an absolute lettering box. */
-export function contentBandBox(frame: Bounds, band: ContentBand): Bounds {
+export function contentBandBox(frame: Bounds, band: ContentBand, shapeId: RefShapeId): Bounds {
+  const tpl = REF_TEMPLATES[shapeId];
+  const [, , viewWidth, viewHeight] = tpl.viewBox;
+  // Match buildRefSheetShape/mapTemplatePath exactly: the traced template is
+  // uniformly scaled and centred inside a small stroke inset. A content band
+  // must follow that mapped template, not the raw authoring frame, otherwise
+  // wide text can sit outside tall or narrow silhouettes.
+  const pad = Math.min(frame.width, frame.height) * 0.02;
+  const target = {
+    x: frame.x + pad,
+    y: frame.y + pad,
+    width: Math.max(1, frame.width - pad * 2),
+    height: Math.max(1, frame.height - pad * 2),
+  };
+  const scale = Math.min(target.width / viewWidth, target.height / viewHeight);
+  const mappedWidth = viewWidth * scale;
+  const mappedHeight = viewHeight * scale;
+  const mappedX = target.x + (target.width - mappedWidth) / 2;
+  const mappedY = target.y + (target.height - mappedHeight) / 2;
   const left = band.left ?? 0;
   const right = band.right ?? 1;
-  const x = roundN(frame.x + frame.width * left);
-  const y = roundN(frame.y + frame.height * band.top);
-  const w = roundN(frame.width * Math.max(0.05, right - left));
-  const h = roundN(frame.height * Math.max(0.05, band.bottom - band.top));
+  const x = roundN(mappedX + mappedWidth * left);
+  const y = roundN(mappedY + mappedHeight * band.top);
+  const w = roundN(mappedWidth * Math.max(0.05, right - left));
+  const h = roundN(mappedHeight * Math.max(0.05, band.bottom - band.top));
   return { x, y, width: Math.max(1, w), height: Math.max(1, h) };
 }
 

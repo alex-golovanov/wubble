@@ -40,6 +40,10 @@ export interface TypographyProfile {
   fontFamily: string;
   fontFile: string;
   fontDigestSha256: string;
+  sourceLabelScale: number;
+  sourceLabelMinFontSize: number;
+  sourceLabelMaxFontSize: number;
+  sourceLabelGapFactor: number;
 }
 
 export interface RenderProfile {
@@ -67,10 +71,10 @@ const sharedFit = {
 /** Ref-sheet balloons: text drives size; comic lettering density (air, not sparse). */
 const refFit = {
   ...sharedFit,
-  paddingX: 28,
-  paddingY: 24,
-  paddingRatio: 0.09,
-  usableWidthFactor: 0.94,
+  paddingX: 44,
+  paddingY: 34,
+  paddingRatio: 0.12,
+  usableWidthFactor: 0.9,
   minFontSize: 30,
   maxFontSize: 64,
   maxLines: 5,
@@ -175,8 +179,8 @@ export const PROFILE = {
       fill: "#fffaf0",
       stroke: "#241f1a",
       strokeWidth: 12,
-      paddingRatio: 0.09,
-      usableWidthFactor: 0.96,
+      paddingRatio: 0.12,
+      usableWidthFactor: 0.9,
       maxFontSize: 64,
     }),
   },
@@ -185,6 +189,10 @@ export const PROFILE = {
     fontFamily: "Noto Sans",
     fontFile: "assets/fonts/NotoSans-Regular.otf",
     fontDigestSha256: "bfb44de2c2031c391ff856943fe8f105ebb5d725cb9a04d493d211d5bbd5c21b",
+    sourceLabelScale: 0.36,
+    sourceLabelMinFontSize: 14,
+    sourceLabelMaxFontSize: 24,
+    sourceLabelGapFactor: 0.35,
   },
   numberPrecision: 2,
 } satisfies RenderProfile;

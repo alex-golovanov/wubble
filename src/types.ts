@@ -184,6 +184,13 @@ export interface FittedText {
   lineHeight: number;
   contentWidth: number;
   contentHeight: number;
+  sourceLabel?: {
+    text: string;
+    fontSize: number;
+    lineHeight: number;
+    contentWidth: number;
+    gapAfter: number;
+  };
   /** Full balloon frame (shape template maps here). */
   bodyBounds: Bounds;
   /**

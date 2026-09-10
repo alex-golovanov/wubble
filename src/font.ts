@@ -1,20 +1,22 @@
-import opentype from "opentype.js";
-import type { Font } from "opentype.js";
+import { create } from "fontkit";
+import type { Font, FontCollection } from "fontkit";
 import { loadFontBytes, PROFILE } from "./profile";
 import { roundN } from "./normalize";
 
 let cachedFont: Font | null = null;
 
-function bufferToArrayBuffer(bytes: Buffer): ArrayBuffer {
-  const ab = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(ab).set(bytes);
-  return ab;
+function isFont(value: Font | FontCollection): value is Font {
+  return "layout" in value;
 }
 
 export function getFont(): Font {
   if (cachedFont) return cachedFont;
   const bytes = loadFontBytes();
-  const font = opentype.parse(bufferToArrayBuffer(bytes));
+  const parsed = create(bytes);
+  if (!isFont(parsed)) {
+    throw new Error("The configured font asset is a collection; Wubble requires one font face.");
+  }
+  const font = parsed;
   cachedFont = font;
   return font;
 }
@@ -28,25 +30,40 @@ export function missingGlyphs(text: string): string[] {
     if (ch === "\n" || ch === "\r" || ch === "\t") continue;
     if (seen.has(ch)) continue;
     seen.add(ch);
-    const g = font.charToGlyph(ch);
-    // .notdef has unicode undefined / name '.notdef' / index 0 typically
-    if (!g || g.name === ".notdef" || (g.unicode === undefined && g.index === 0)) {
-      // Space and common whitespace should exist; if not, still flag
-      if (ch === " ") {
-        // most fonts have space
-        const sp = font.charToGlyph(" ");
-        if (sp && sp.name !== ".notdef") continue;
-      }
-      missing.push(ch);
-    }
+    const codePoint = ch.codePointAt(0);
+    if (codePoint !== undefined && !font.hasGlyphForCodePoint(codePoint)) missing.push(ch);
   }
   return missing;
 }
 
 export function measureWidth(text: string, fontSize: number): number {
   const font = getFont();
-  const w = font.getAdvanceWidth(text, fontSize);
+  const run = font.layout(text);
+  const w = (run.advanceWidth / font.unitsPerEm) * fontSize;
   return roundN(w);
+}
+
+export interface FontVerticalMetrics {
+  ascent: number;
+  descent: number;
+  lineHeight: number;
+  baselineOffset: number;
+}
+
+/**
+ * Resolve a centred SVG line box from the configured font's real vertical
+ * metrics. The extra leading keeps adjacent ink and balloon edges separate.
+ */
+export function fontVerticalMetrics(fontSize: number): FontVerticalMetrics {
+  const font = getFont();
+  const scale = fontSize / font.unitsPerEm;
+  const ascent = roundN(font.ascent * scale);
+  const descent = roundN(Math.abs(font.descent) * scale);
+  const metricHeight = ascent + descent;
+  const profileHeight = fontSize * PROFILE.shapes.speech.lineHeightFactor;
+  const lineHeight = roundN(Math.max(profileHeight, metricHeight + fontSize * 0.12));
+  const baselineOffset = roundN((lineHeight - metricHeight) / 2 + ascent);
+  return { ascent, descent, lineHeight, baselineOffset };
 }
 
 /**
@@ -87,5 +104,5 @@ export function wrapText(text: string, fontSize: number, maxWidth: number): stri
 }
 
 export function lineHeightPx(fontSize: number): number {
-  return roundN(fontSize * PROFILE.shapes.speech.lineHeightFactor);
+  return fontVerticalMetrics(fontSize).lineHeight;
 }

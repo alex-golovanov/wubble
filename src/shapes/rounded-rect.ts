@@ -146,23 +146,18 @@ function pushSmoothTail(
   tip: Point,
   exit: Point,
   bend: Point | null,
-  mid: Point,
 ): void {
-  const reach = Math.hypot(tip.x - mid.x, tip.y - mid.y);
-  // Keep a fat comic hook near the body; only the last third tapers hard.
-  const near = Math.min(0.38, 55 / Math.max(reach, 1));
-  const kink = bend ?? {
-    x: mid.x + (tip.x - mid.x) * Math.max(0.32, near),
-    y: mid.y + (tip.y - mid.y) * Math.max(0.32, near),
-  };
-  // Side control points stay wide (near enter/exit) so the join reads open and stubby
+  const target = bend ?? tip;
+  // Each control point advances from its own body join toward the requested
+  // target. This prevents a control point from falling behind its join and
+  // creating a reverse hook before the tail begins.
   const c1 = {
-    x: enter.x * 0.55 + kink.x * 0.45,
-    y: enter.y * 0.55 + kink.y * 0.45,
+    x: enter.x + (target.x - enter.x) * 0.32,
+    y: enter.y + (target.y - enter.y) * 0.32,
   };
   const c2 = {
-    x: exit.x * 0.55 + kink.x * 0.45,
-    y: exit.y * 0.55 + kink.y * 0.45,
+    x: exit.x + (target.x - exit.x) * 0.32,
+    y: exit.y + (target.y - exit.y) * 0.32,
   };
   cmds.push({ t: "Q", c: c1, p: tip });
   cmds.push({ t: "Q", c: c2, p: exit });
@@ -208,7 +203,7 @@ function pushTail(
   edge: EdgeStyle,
 ): void {
   if (edge === "jagged") pushJaggedTail(cmds, enter, tip, exit, bend, mid);
-  else pushSmoothTail(cmds, enter, tip, exit, bend, mid);
+  else pushSmoothTail(cmds, enter, tip, exit, bend);
 }
 
 function jagPoints(from: Point, to: Point, amp: number, steps: number): Point[] {
