@@ -10,15 +10,15 @@ Wubble turns one placement manifest into separate language-specific transparent 
 
 A page manifest is JSON (UTF-8) that declares:
 
-| Field             | Role                                                     |
-| ----------------- | -------------------------------------------------------- |
-| `schemaVersion`   | Must be `"0.1.0"`                                        |
-| `pageId`          | Stable page id                                           |
-| `coordinateSpace` | Art pixel grid (shared with the text-free master)        |
-| `renderProfile`   | Typography / shape profile (`rift-city-proof` @ `0.1.0`) |
-| `subjects`        | Speakers/objects with named anchors                      |
-| `exclusionZones`  | Hard/soft no-cover regions                               |
-| `items`           | Balloons and intentional `silent` markers                |
+| Field             | Role                                                    |
+| ----------------- | ------------------------------------------------------- |
+| `schemaVersion`   | Must be `"0.1.0"`                                       |
+| `pageId`          | Stable page id                                          |
+| `coordinateSpace` | Art pixel grid (shared with the text-free master)       |
+| `renderProfile`   | Typography / shape profile (`wubble-default` @ `0.1.0`) |
+| `subjects`        | Speakers/objects with named anchors                     |
+| `exclusionZones`  | Hard/soft no-cover regions                              |
+| `items`           | Balloons and intentional `silent` markers               |
 
 Required top-level keys; `additionalProperties` is false. Ids match `^[A-Za-z0-9][A-Za-z0-9._-]*$`.
 
@@ -34,7 +34,7 @@ Minimal skeleton:
     "origin": "top-left",
     "units": "art-px"
   },
-  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "renderProfile": { "id": "wubble-default", "version": "0.1.0" },
   "subjects": [],
   "exclusionZones": [],
   "items": [
@@ -88,7 +88,7 @@ Stable identifier for the page (appears in diagnostics).
 ### `renderProfile`
 
 ```json
-{ "id": "rift-city-proof", "version": "0.1.0" }
+{ "id": "wubble-default", "version": "0.1.0" }
 ```
 
 Binds fill/stroke, padding, font, and fit limits from the compiled profile in `src/profile.ts`. The proof profile continues to embed **Noto Sans Regular** (Latin + Cyrillic) and digest the font bytes.
@@ -189,7 +189,7 @@ Per locale (BCP 47-ish tags: `en`, `ru`, …), supply **exactly one** of:
 - `text` — free string; wubble wraps at measured width
 - `lines` — authored breaks; preserved (no re-wrap), still measured
 
-Optional `sourceLabel` for editorial notes (e.g. found-recording labels).
+Optional `label` — a short line set above the text inside the same body, for a heading, a source or a speaker plate.
 
 ```json
 "content": {
@@ -200,7 +200,7 @@ Optional `sourceLabel` for editorial notes (e.g. found-recording labels).
 
 Missing locale for the requested render → `LOCALE_MISSING`. Missing glyphs in the bundled font → `GLYPH_MISSING`.
 
-Optional `sourceLabel` is measured with the bundled font and rendered above the dialogue at the profile's smaller source-label size. Its width and height participate in balloon fitting.
+The `label` is measured with its own registered face and rendered above the text at the profile's smaller label size, and its width and height participate in balloon fitting. Whether a style may, must, or must not carry one is a project decision — see **Lettering styles** below.
 
 #### `localeOverrides`
 
@@ -275,7 +275,35 @@ For **chain**, lobe lettering can sit in template content bands on the fitted fr
 
 ## 8. Shape catalog
 
-Registered `shapeId` values (schema enum). All are implemented in profile `rift-city-proof` @ `0.1.0`.
+## Lettering styles
+
+Every balloon has a **style** — a lettering register named for its form, never for who is speaking:
+
+| Style      | What it is                                       |
+| ---------- | ------------------------------------------------ |
+| `dialogue` | someone speaking; drawn outline, tail permitted  |
+| `notice`   | a squared, strict, formal box; may carry a label |
+| `caption`  | a plain box with no speaker and no tail          |
+
+Wubble ships neutral defaults for each. What a style looks like, whether it may take a tail or a label, and which registered face it speaks in are a **project's** decision, supplied per render:
+
+```jsonc
+// rules.json — a project's house rules, owned by the project
+{
+  "fonts": { "dialogue": "shantell-sans-semibold", "notice": "oswald-medium" },
+  "styles": {
+    "notice": { "label": "required", "tail": "forbidden", "labelBrackets": true },
+  },
+}
+```
+
+```sh
+wubble render page.json --locale en --output page.svg --config rules.json
+```
+
+Library callers pass the same thing as `RenderOptions.styles` / `.fonts`. `tail` and `label` each take `required`, `allowed` or `forbidden`, and the validator reports `STYLE_RULE` when a manifest breaks them.
+
+Registered `shapeId` values (schema enum). All are implemented in profile `wubble-default` @ `0.1.0`.
 
 ### Rounded-rect family (one public shape)
 
@@ -417,12 +445,12 @@ import { validatePage, renderPage } from "wubble";
 
 const report = validatePage(manifest, {
   locale: "en",
-  profileId: "rift-city-proof",
+  profileId: "wubble-default",
 });
 
 const { svg, diagnostics } = renderPage(manifest, {
   locale: "ru",
-  profileId: "rift-city-proof",
+  profileId: "wubble-default",
 });
 ```
 

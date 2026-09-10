@@ -7,12 +7,25 @@
     "origin": "top-left",
     "units": "art-px"
   },
-  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "renderProfile": {
+    "id": "wubble-default",
+    "version": "0.1.0"
+  },
   "subjects": [
     {
       "id": "speaker",
-      "bounds": { "x": 380, "y": 1180, "width": 140, "height": 120 },
-      "anchors": { "mouth": { "x": 450, "y": 1200 } }
+      "bounds": {
+        "x": 380,
+        "y": 1180,
+        "width": 140,
+        "height": 120
+      },
+      "anchors": {
+        "mouth": {
+          "x": 450,
+          "y": 1200
+        }
+      }
     }
   ],
   "exclusionZones": [],
@@ -25,25 +38,53 @@
       "shapeId": "speech",
       "cornerRadius": 1,
       "edge": "smooth",
-      "placement": { "x": 240, "y": 60, "width": 400, "height": 150 },
+      "placement": {
+        "x": 240,
+        "y": 60,
+        "width": 400,
+        "height": 150
+      },
       "lobes": [
         {
-          "placement": { "x": 200, "y": 320, "width": 480, "height": 160 },
-          "content": { "en": { "lines": ["Then the middle", "thought lands."] } }
+          "placement": {
+            "x": 200,
+            "y": 320,
+            "width": 480,
+            "height": 160
+          },
+          "content": {
+            "en": {
+              "lines": ["Then the middle", "thought lands."]
+            }
+          }
         },
         {
-          "placement": { "x": 220, "y": 600, "width": 440, "height": 160 },
-          "content": { "en": { "lines": ["And the closer", "punchline hits."] } }
+          "placement": {
+            "x": 220,
+            "y": 600,
+            "width": 440,
+            "height": 160
+          },
+          "content": {
+            "en": {
+              "lines": ["And the closer", "punchline hits."]
+            }
+          }
         }
       ],
       "tail": {
         "subjectId": "speaker",
         "anchor": "mouth",
         "attachment": "bottom",
-        "bend": { "x": 430, "y": 900 }
+        "bend": {
+          "x": 430,
+          "y": 900
+        }
       },
       "content": {
-        "en": { "lines": ["First beat —", "setup."] }
+        "en": {
+          "lines": ["First beat —", "setup."]
+        }
       }
     }
   ]

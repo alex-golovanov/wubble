@@ -9,7 +9,7 @@
     "units": "art-px"
   },
   "renderProfile": {
-    "id": "rift-city-proof",
+    "id": "wubble-default",
     "version": "0.1.0"
   },
   "subjects": [
@@ -84,7 +84,7 @@
           "lines": ["Hi"]
         },
         "ru": {
-          "lines": ["\u041f\u0440\u0438\u0432\u0435\u0442"]
+          "lines": ["Привет"]
         }
       }
     },

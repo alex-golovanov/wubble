@@ -55,16 +55,16 @@ describe("renderPage", () => {
     expect(enSvg).toContain('font-family: "Shantell Sans SemiBold"');
     expect(enSvg).not.toContain("/System/Library");
     expect(enSvg).not.toContain("fonts.googleapis");
-    // digest recorded in the registry for the bound human face
-    expect(fontAsset(PROFILE.typography.roles.human.fontId).digestSha256).toHaveLength(64);
+    // digest recorded in the registry for the bound dialogue face
+    expect(fontAsset(PROFILE.typography.roles.dialogue.fontId).digestSha256).toHaveLength(64);
   });
 
-  test("source label is measured and rendered smaller than dialogue", () => {
+  test("a label is measured and rendered smaller than the text it sits above", () => {
     const m = load("fixtures/source-label.json");
     const svg = requireSvg(renderPage(m, { locale: "en", profileId: PROFILE_ID }));
-    expect(svg).toContain('data-part="source-label"');
+    expect(svg).toContain('data-part="label"');
     expect(svg).toContain(">TRANSIT ANNOUNCEMENT</text>");
-    const labelSize = svg.match(/data-part="source-label"[^>]*font-size="([0-9.]+)"/);
+    const labelSize = svg.match(/data-part="label"[^>]*font-size="([0-9.]+)"/);
     const dialogueSize = svg.match(/<text x="[^"]+" y="[^"]+"[^>]*font-size="([0-9.]+)"/);
     if (!labelSize?.[1] || !dialogueSize?.[1])
       throw new Error("expected source and dialogue sizes");

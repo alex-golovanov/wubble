@@ -2,16 +2,32 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { FontBinding, FontId, FontRole, ShapeId, Voice } from "./types";
+import type {
+  FontBinding,
+  FontId,
+  FontRole,
+  LetterStyle,
+  ShapeId,
+  StyleOverrides,
+  StyleProfile,
+} from "./types";
 
-export type { FontBinding, FontId, FontRole } from "./types";
+export type {
+  FontBinding,
+  FontId,
+  FontRole,
+  LetterStyle,
+  Requirement,
+  StyleOverrides,
+  StyleProfile,
+} from "./types";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const PACKAGE_VERSION = "0.1.0";
 export const SCHEMA_VERSION = "0.1.0";
 
-export const PROFILE_ID = "rift-city-proof";
+export const PROFILE_ID = "wubble-default";
 export const PROFILE_VERSION = "0.1.0";
 
 export interface FitParams {
@@ -108,10 +124,10 @@ export interface TypographyRole {
 
 export interface TypographyProfile {
   roles: Record<FontRole, TypographyRole>;
-  sourceLabelScale: number;
-  sourceLabelMinFontSize: number;
-  sourceLabelMaxFontSize: number;
-  sourceLabelGapFactor: number;
+  labelScale: number;
+  labelMinFontSize: number;
+  labelMaxFontSize: number;
+  labelGapFactor: number;
 }
 
 /** Every face Wubble may load, pinned by digest. */
@@ -128,6 +144,7 @@ export interface RenderProfile {
   id: string;
   version: string;
   shapes: Record<ShapeId, ShapeProfile>;
+  styles: Record<LetterStyle, StyleProfile>;
   typography: TypographyProfile;
   numberPrecision: number;
 }
@@ -262,17 +279,45 @@ export const PROFILE = {
       maxFontSize: 64,
     }),
   },
+  styles: {
+    dialogue: {
+      cornerRadius: 0.9,
+      edge: "hand",
+      fontRole: "dialogue",
+      labelFontRole: "noticeLabel",
+      tail: "allowed",
+      label: "forbidden",
+      labelBrackets: false,
+    },
+    notice: {
+      cornerRadius: 0,
+      edge: "smooth",
+      fontRole: "notice",
+      labelFontRole: "noticeLabel",
+      tail: "forbidden",
+      label: "allowed",
+      labelBrackets: false,
+    },
+    caption: {
+      cornerRadius: 0.06,
+      edge: "smooth",
+      fontRole: "dialogue",
+      labelFontRole: "noticeLabel",
+      tail: "forbidden",
+      label: "forbidden",
+      labelBrackets: false,
+    },
+  },
   typography: {
     roles: {
-      human: { fontId: "shantell-sans-semibold", uppercase: false },
-      // Provisional until the machine voice is selected by name.
-      machine: { fontId: "ibm-plex-mono-regular", uppercase: false },
-      machineLabel: { fontId: "ibm-plex-mono-regular", uppercase: true },
+      dialogue: { fontId: "shantell-sans-semibold", uppercase: false },
+      notice: { fontId: "oswald-medium", uppercase: false },
+      noticeLabel: { fontId: "oswald-medium", uppercase: true },
     },
-    sourceLabelScale: 0.36,
-    sourceLabelMinFontSize: 14,
-    sourceLabelMaxFontSize: 24,
-    sourceLabelGapFactor: 0.35,
+    labelScale: 0.36,
+    labelMinFontSize: 14,
+    labelMaxFontSize: 24,
+    labelGapFactor: 0.35,
   },
   numberPrecision: 2,
 } satisfies RenderProfile;
@@ -323,40 +368,49 @@ export function fontMime(id: FontId): string {
   return fontAsset(id).format === "opentype" ? "font/otf" : "font/ttf";
 }
 
+export function styleProfile(style: LetterStyle): StyleProfile {
+  return PROFILE.styles[style];
+}
+
+/** The profile's defaults for a style, with this render's house rules on top. */
+export function resolveStyleProfile(style: LetterStyle, overrides?: StyleOverrides): StyleProfile {
+  const base = PROFILE.styles[style];
+  const patch = overrides?.[style];
+  if (!patch) return base;
+  return { ...base, ...patch };
+}
+
 export function defaultFontBinding(): FontBinding {
   const roles = PROFILE.typography.roles;
   return {
-    human: roles.human.fontId,
-    machine: roles.machine.fontId,
-    machineLabel: roles.machineLabel.fontId,
+    dialogue: roles.dialogue.fontId,
+    notice: roles.notice.fontId,
+    noticeLabel: roles.noticeLabel.fontId,
   };
 }
 
 /**
- * Resolve one render's faces. Overriding `machine` moves the source label with
- * it unless the label is overridden separately, so a candidate is one decision.
+ * Resolve one render's faces. Overriding `notice` moves its label with it
+ * unless the label is overridden separately, so a candidate is one decision.
  */
 export function resolveFontBinding(overrides?: Partial<FontBinding>): FontBinding {
   const base = defaultFontBinding();
   if (!overrides) return base;
   return {
-    human: overrides.human ?? base.human,
-    machine: overrides.machine ?? base.machine,
-    machineLabel: overrides.machineLabel ?? overrides.machine ?? base.machineLabel,
+    dialogue: overrides.dialogue ?? base.dialogue,
+    notice: overrides.notice ?? base.notice,
+    noticeLabel: overrides.noticeLabel ?? overrides.notice ?? base.noticeLabel,
   };
 }
 
-export function voiceOf(item: { voice?: Voice }): Voice {
-  return item.voice ?? "human";
+export function styleOf(item: { style?: LetterStyle }): LetterStyle {
+  return item.style ?? "dialogue";
 }
 
-/** Dialogue face for a voice. Narration is set in the human hand. */
-export function textFontIdFor(binding: FontBinding, voice: Voice): FontId {
-  return voice === "machine" ? binding.machine : binding.human;
-}
-
-export function labelFontIdFor(binding: FontBinding): FontId {
-  return binding.machineLabel;
+export function fontIdForRole(binding: FontBinding, role: FontRole): FontId {
+  if (role === "notice") return binding.notice;
+  if (role === "noticeLabel") return binding.noticeLabel;
+  return binding.dialogue;
 }
 
 export function shapeProfile(shapeId: ShapeId): ShapeProfile {

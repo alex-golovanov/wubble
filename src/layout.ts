@@ -2,10 +2,10 @@ import { missingGlyphs, measureWidth, wrapText, lineHeightPx } from "./font";
 import { roundN } from "./normalize";
 import {
   defaultFontBinding,
-  labelFontIdFor,
+  fontIdForRole,
   PROFILE,
+  resolveStyleProfile,
   shapeProfile,
-  textFontIdFor,
   type FontBinding,
   type FontId,
 } from "./profile";
@@ -26,9 +26,10 @@ import type {
   Diagnostic,
   EdgeStyle,
   FittedText,
+  LetterStyle,
   LocaleContent,
   ShapeId,
-  Voice,
+  StyleOverrides,
 } from "./types";
 import { diag } from "./diagnostics";
 
@@ -44,25 +45,30 @@ export interface LetterFonts {
   labelUppercase: boolean;
 }
 
-export function letterFontsFor(voice: Voice, binding: FontBinding): LetterFonts {
+export function letterFontsFor(
+  style: LetterStyle,
+  binding: FontBinding,
+  overrides?: StyleOverrides,
+): LetterFonts {
+  const profile = resolveStyleProfile(style, overrides);
   return {
-    text: textFontIdFor(binding, voice),
-    label: labelFontIdFor(binding),
-    labelUppercase: PROFILE.typography.roles.machineLabel.uppercase,
+    text: fontIdForRole(binding, profile.fontRole),
+    label: fontIdForRole(binding, profile.labelFontRole),
+    labelUppercase: PROFILE.typography.roles[profile.labelFontRole].uppercase,
   };
 }
 
 export function defaultLetterFonts(): LetterFonts {
-  return letterFontsFor("human", defaultFontBinding());
+  return letterFontsFor("dialogue", defaultFontBinding());
 }
 
-/** Source label exactly as it will be measured and drawn. */
+/** The label exactly as it will be measured and drawn. */
 export function resolveLabelText(
-  sourceLabel: string | undefined,
+  label: string | undefined,
   fonts: LetterFonts,
 ): string | undefined {
-  if (sourceLabel === undefined) return undefined;
-  return fonts.labelUppercase ? sourceLabel.toUpperCase() : sourceLabel;
+  if (label === undefined) return undefined;
+  return fonts.labelUppercase ? label.toUpperCase() : label;
 }
 
 function contentString(content: LocaleContent): string {
@@ -76,32 +82,32 @@ function measureContent(
   lines: string[],
   fontSize: number,
   lineHeight: number,
-  sourceLabel: string | undefined,
+  label: string | undefined,
   fonts: LetterFonts,
 ): TextMetrics {
   const dialogueWidth = roundN(
     Math.max(...lines.map((line) => measureWidth(line, fontSize, fonts.text)), 0),
   );
   const dialogueHeight = roundN(lines.length * lineHeight);
-  if (!sourceLabel) {
+  if (!label) {
     return { contentWidth: dialogueWidth, contentHeight: dialogueHeight };
   }
 
   const typography = PROFILE.typography;
   const labelFontSize = roundN(
     Math.min(
-      typography.sourceLabelMaxFontSize,
-      Math.max(typography.sourceLabelMinFontSize, fontSize * typography.sourceLabelScale),
+      typography.labelMaxFontSize,
+      Math.max(typography.labelMinFontSize, fontSize * typography.labelScale),
     ),
   );
   const labelLineHeight = lineHeightPx(labelFontSize, fonts.label);
-  const labelWidth = measureWidth(sourceLabel, labelFontSize, fonts.label);
-  const gapAfter = roundN(labelFontSize * typography.sourceLabelGapFactor);
+  const labelWidth = measureWidth(label, labelFontSize, fonts.label);
+  const gapAfter = roundN(labelFontSize * typography.labelGapFactor);
   return {
     contentWidth: roundN(Math.max(dialogueWidth, labelWidth)),
     contentHeight: roundN(labelLineHeight + gapAfter + dialogueHeight),
     sourceLabel: {
-      text: sourceLabel,
+      text: label,
       fontSize: labelFontSize,
       lineHeight: labelLineHeight,
       contentWidth: labelWidth,
@@ -134,26 +140,23 @@ export interface FitStyle {
 }
 
 /**
- * Silhouette defaults come from the voice, so a manifest states who is talking
- * and gets the right balloon. Explicit knobs still win.
- *
- * human     — nearly-round body, hand-drawn outline.
- * machine   — hard square box; a played-back clip, not a voice. The torn
- *              outline is reserved for a clip that is failing.
- * narration — a plain caption box.
+ * Silhouette defaults come from the lettering style, so a manifest names a
+ * register and gets the right balloon. Explicit knobs still win. What each
+ * style looks like lives in the render profile, not here.
  */
-export function voiceStyle(voice: Voice): { cornerRadius: number; edge: EdgeStyle } {
-  if (voice === "machine") return { cornerRadius: 0, edge: "smooth" };
-  if (voice === "narration") return { cornerRadius: 0.06, edge: "smooth" };
-  return { cornerRadius: 0.9, edge: "hand" };
+export function letterStyleShape(
+  style: LetterStyle,
+  overrides?: StyleOverrides,
+): { cornerRadius: number; edge: EdgeStyle } {
+  const profile = resolveStyleProfile(style, overrides);
+  return { cornerRadius: profile.cornerRadius, edge: profile.edge };
 }
 
-export function fitStyleOf(item: {
-  cornerRadius?: number;
-  edge?: EdgeStyle;
-  voice?: Voice;
-}): FitStyle {
-  const base = voiceStyle(item.voice ?? "human");
+export function fitStyleOf(
+  item: { cornerRadius?: number; edge?: EdgeStyle; style?: LetterStyle },
+  overrides?: StyleOverrides,
+): FitStyle {
+  const base = letterStyleShape(item.style ?? "dialogue", overrides);
   return {
     cornerRadius: item.cornerRadius ?? base.cornerRadius,
     edge: item.edge ?? base.edge,
@@ -245,7 +248,7 @@ export function fitBalloonText(
   const shape = shapeProfile(shapeId);
   const diagnostics: Diagnostic[] = [];
   const raw = contentString(content);
-  const labelText = resolveLabelText(content.sourceLabel, fonts);
+  const labelText = resolveLabelText(content.label, fonts);
 
   const missing = [
     ...missingGlyphs(raw.replace(/\n/g, ""), fonts.text),

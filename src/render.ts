@@ -15,7 +15,8 @@ import {
   fontMime,
   isShapeImplemented,
   resolveFontBinding,
-  voiceOf,
+  resolveStyleProfile,
+  styleOf,
   type FontId,
 } from "./profile";
 import { fmt, roundN } from "./normalize";
@@ -39,11 +40,11 @@ function escapeXml(s: string): string {
 }
 
 /**
- * Source-tag brackets, drawn as geometry rather than typed.
- * The canon tag is written ⟦LIKE THIS⟧ and almost no text face carries U+27E6,
- * so the marks are constructed and the font choice stays free.
+ * Label brackets, drawn as geometry rather than typed. ⟦ ⟧ is U+27E6/U+27E7,
+ * which almost no text face carries, so the marks are constructed and the
+ * choice of typeface stays free. Drawn only when the style asks for them.
  */
-function sourceTagBrackets(
+function labelBrackets(
   midX: number,
   baseline: number,
   labelWidth: number,
@@ -70,7 +71,7 @@ function sourceTagBrackets(
     `M ${fmt(rightOuter - inner)} ${fmt(top)}`,
     `L ${fmt(rightOuter - inner)} ${fmt(baseline)}`,
   ].join(" ");
-  return `      <path data-part="source-tag-brackets" d="${d}" fill="none" stroke="currentColor" stroke-width="${fmt(roundN(fontSize * 0.09))}" stroke-linecap="square"/>`;
+  return `      <path data-part="label-brackets" d="${d}" fill="none" stroke="currentColor" stroke-width="${fmt(roundN(fontSize * 0.09))}" stroke-linecap="square"/>`;
 }
 
 function textNodesFor(
@@ -79,6 +80,7 @@ function textNodesFor(
   shapeId: BalloonItem["shapeId"],
   fill: string,
   fonts: LetterFonts,
+  brackets: boolean,
   style?: import("./layout").FitStyle,
 ): string {
   const box = fitted.textBounds ?? body;
@@ -95,9 +97,11 @@ function textNodesFor(
     const label = fitted.sourceLabel;
     const labelBaseline = fontVerticalMetrics(label.fontSize, fonts.label).baselineOffset;
     const baseline = blockTop + labelBaseline;
+    if (brackets) {
+      nodes.push(labelBrackets(midX, baseline, label.contentWidth, label.fontSize));
+    }
     nodes.push(
-      sourceTagBrackets(midX, baseline, label.contentWidth, label.fontSize),
-      `      <text data-part="source-label" x="${fmt(midX)}" y="${fmt(baseline)}" text-anchor="middle" font-family="${escapeXml(fontAsset(fonts.label).family)}" font-size="${fmt(label.fontSize)}">${escapeXml(label.text)}</text>`,
+      `      <text data-part="label" x="${fmt(midX)}" y="${fmt(baseline)}" text-anchor="middle" font-family="${escapeXml(fontAsset(fonts.label).family)}" font-size="${fmt(label.fontSize)}">${escapeXml(label.text)}</text>`,
     );
     dialogueTop += label.lineHeight + label.gapAfter;
   }
@@ -116,6 +120,7 @@ function renderBalloonGroup(
   item: BalloonItem,
   locale: string,
   fonts: LetterFonts,
+  brackets: boolean,
 ): string | null {
   if (!isShapeImplemented(item.shapeId)) return null;
   const content = item.content[locale];
@@ -184,14 +189,18 @@ function renderBalloonGroup(
 
   const parts: string[] = [];
   parts.push(
-    `  <g id="${escapeXml(item.id)}" data-shape="${item.shapeId}" data-voice="${voiceOf(item)}">`,
+    `  <g id="${escapeXml(item.id)}" data-shape="${item.shapeId}" data-style="${styleOf(item)}">`,
   );
   parts.push(
     `    <path data-part="balloon" d="${geom.path}" fill="${geom.fill}" stroke="${geom.stroke}" stroke-width="${fmt(geom.strokeWidth)}" stroke-linejoin="round" stroke-linecap="round"/>`,
   );
-  parts.push(textNodesFor(layout.fitted, body, item.shapeId, geom.stroke, fonts, fitStyle));
+  parts.push(
+    textNodesFor(layout.fitted, body, item.shapeId, geom.stroke, fonts, brackets, fitStyle),
+  );
   for (const lobe of lobeFits) {
-    parts.push(textNodesFor(lobe.fitted, lobe.body, item.shapeId, geom.stroke, fonts, fitStyle));
+    parts.push(
+      textNodesFor(lobe.fitted, lobe.body, item.shapeId, geom.stroke, fonts, brackets, fitStyle),
+    );
   }
   parts.push(`  </g>`);
   return parts.join("\n");
@@ -225,12 +234,14 @@ function serializeSvg(manifest: PageManifest, locale: string, options: RenderOpt
     const content = item.content[locale];
     if (!content) continue;
     if (!isShapeImplemented(item.shapeId)) continue;
-    const fonts = letterFontsFor(voiceOf(item), binding);
-    const g = renderBalloonGroup(manifest, item, locale, fonts);
+    const style = styleOf(item);
+    const rules = resolveStyleProfile(style, options.styles);
+    const fonts = letterFontsFor(style, binding, options.styles);
+    const g = renderBalloonGroup(manifest, item, locale, fonts, rules.labelBrackets);
     if (!g) continue;
     groups.push(g);
     useFont(fonts.text);
-    if (content.sourceLabel !== undefined) useFont(fonts.label);
+    if (content.label !== undefined) useFont(fonts.label);
     for (const lobe of item.lobes ?? []) {
       if (lobe.content[locale]) useFont(fonts.text);
     }

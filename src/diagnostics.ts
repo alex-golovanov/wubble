@@ -20,7 +20,7 @@ const LEVEL: Record<DiagnosticCode, DiagnosticLevel> = {
   SOFT_EXCLUSION_OVERLAP: "warning",
   TAIL_CROSSES_BODY: "warning",
   READING_ORDER_AMBIGUOUS: "warning",
-  VOICE_RULE: "error",
+  STYLE_RULE: "error",
 };
 
 export function diag(

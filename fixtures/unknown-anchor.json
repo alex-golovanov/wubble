@@ -9,7 +9,7 @@
     "units": "art-px"
   },
   "renderProfile": {
-    "id": "rift-city-proof",
+    "id": "wubble-default",
     "version": "0.1.0"
   },
   "subjects": [
@@ -89,10 +89,7 @@
           "lines": ["We keep", "moving."]
         },
         "ru": {
-          "lines": [
-            "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0430\u0435\u043c",
-            "\u0434\u0432\u0438\u0433\u0430\u0442\u044c\u0441\u044f."
-          ]
+          "lines": ["Продолжаем", "двигаться."]
         }
       }
     },

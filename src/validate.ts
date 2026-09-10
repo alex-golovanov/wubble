@@ -1,7 +1,14 @@
 import { diag, makeReport } from "./diagnostics";
 import { validateSchema } from "./schema";
 import { fitBalloonText, fitStyleOf, letterFontsFor } from "./layout";
-import { isShapeImplemented, PROFILE, PROFILE_ID, resolveFontBinding, voiceOf } from "./profile";
+import {
+  isShapeImplemented,
+  PROFILE,
+  PROFILE_ID,
+  resolveFontBinding,
+  resolveStyleProfile,
+  styleOf,
+} from "./profile";
 import { boundsInside, rectsOverlap, segmentCrossesBounds } from "./collisions";
 import type {
   BalloonItem,
@@ -110,35 +117,31 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
       continue;
     }
 
-    // Canon rules, enforced rather than trusted to the letterer.
-    const voice = voiceOf(item);
-    if (voice === "machine") {
-      if (item.tail) {
-        diagnostics.push(
-          diag("VOICE_RULE", "A machine playback balloon never carries a tail.", {
-            itemId: item.id,
-          }),
-        );
-      }
-      if (content.sourceLabel === undefined) {
-        diagnostics.push(
-          diag("VOICE_RULE", "A machine playback balloon must name its recording source.", {
-            itemId: item.id,
-          }),
-        );
-      }
-    } else if (content.sourceLabel !== undefined) {
+    // House rules come from the profile; the renderer holds no opinion of its own.
+    const style = styleOf(item);
+    const rules = resolveStyleProfile(style, options.styles);
+    if (rules.tail === "forbidden" && item.tail) {
       diagnostics.push(
-        diag("VOICE_RULE", `A ${voice} balloon cannot carry a recording source label.`, {
-          itemId: item.id,
-        }),
+        diag("STYLE_RULE", `A "${style}" balloon does not carry a tail.`, { itemId: item.id }),
       );
     }
-    if (voice === "narration" && item.tail) {
-      diagnostics.push(diag("VOICE_RULE", "A caption never carries a tail.", { itemId: item.id }));
+    if (rules.tail === "required" && !item.tail) {
+      diagnostics.push(
+        diag("STYLE_RULE", `A "${style}" balloon must carry a tail.`, { itemId: item.id }),
+      );
+    }
+    if (rules.label === "forbidden" && content.label !== undefined) {
+      diagnostics.push(
+        diag("STYLE_RULE", `A "${style}" balloon does not carry a label.`, { itemId: item.id }),
+      );
+    }
+    if (rules.label === "required" && content.label === undefined) {
+      diagnostics.push(
+        diag("STYLE_RULE", `A "${style}" balloon must carry a label.`, { itemId: item.id }),
+      );
     }
 
-    const fonts = letterFontsFor(voice, binding);
+    const fonts = letterFontsFor(style, binding, options.styles);
     const placement = resolvePlacement(item, locale);
     const fitStyle = fitStyleOf(item);
     const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle, fonts);

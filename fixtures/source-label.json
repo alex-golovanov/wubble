@@ -8,7 +8,7 @@
     "units": "art-px"
   },
   "renderProfile": {
-    "id": "rift-city-proof",
+    "id": "wubble-default",
     "version": "0.1.0"
   },
   "subjects": [
@@ -36,7 +36,7 @@
       "panelId": "P022-02",
       "speakerId": "glitch",
       "shapeId": "speech",
-      "voice": "machine",
+      "style": "notice",
       "cornerRadius": 0,
       "placement": {
         "x": 100,
@@ -46,7 +46,7 @@
       },
       "content": {
         "en": {
-          "sourceLabel": "TRANSIT ANNOUNCEMENT",
+          "label": "TRANSIT ANNOUNCEMENT",
           "text": "—doors held. Please stand clear—"
         }
       }

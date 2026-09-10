@@ -17,7 +17,7 @@ export type DiagnosticCode =
   | "SOFT_EXCLUSION_OVERLAP"
   | "TAIL_CROSSES_BODY"
   | "READING_ORDER_AMBIGUOUS"
-  | "VOICE_RULE";
+  | "STYLE_RULE";
 
 export interface DiagnosticSuggestion {
   field: string;
@@ -75,7 +75,8 @@ export interface ExclusionZone {
 export interface LocaleContent {
   text?: string;
   lines?: string[];
-  sourceLabel?: string;
+  /** Small label set above the text inside the same body. */
+  label?: string;
 }
 
 export interface Tail {
@@ -111,12 +112,17 @@ export type ShapeId =
 export type EdgeStyle = "smooth" | "jagged" | "hand";
 
 /**
- * Who is speaking, as a channel rather than a styling choice.
- * human    — a person; rounded hand-drawn balloon with a tail.
- * machine  — played-back recording; square, source-tagged, never tailed.
- * narration — caption box; no speaker, no tail.
+ * Lettering register — what kind of object this is on the page, named for its
+ * form rather than for who is talking. A project maps its own cast onto these.
+ *
+ * dialogue — someone speaking; rounded, hand-drawn outline, tail permitted.
+ * notice   — a squared, strict, formal box; carries a small label; no tail.
+ * caption  — a plain box with no speaker and no tail.
+ *
+ * What each one looks like, and which of them may take a tail or a label, is
+ * the render profile's business, not this union's.
  */
-export type Voice = "human" | "machine" | "narration";
+export type LetterStyle = "dialogue" | "notice" | "caption";
 
 /** Registered font assets. Nothing outside this union can be loaded. */
 export type FontId =
@@ -128,13 +134,38 @@ export type FontId =
   | "oswald-medium";
 
 /** A lettering role. Roles, not characters, own a typeface. */
-export type FontRole = "human" | "machine" | "machineLabel";
+export type FontRole = "dialogue" | "notice" | "noticeLabel";
+
+/** Whether a feature is compulsory, optional or refused for a lettering style. */
+export type Requirement = "required" | "allowed" | "forbidden";
+
+/**
+ * What one lettering style looks like and what it will accept.
+ *
+ * This table is the whole of a project's house rules. Wubble itself has no
+ * opinion about who may speak in which balloon: it ships plain defaults, and a
+ * project overrides them per render.
+ */
+export interface StyleProfile {
+  /** 0..1 of min(w, h) / 2. 0 = square corners, 1 = full pill. */
+  cornerRadius: number;
+  edge: EdgeStyle;
+  fontRole: FontRole;
+  labelFontRole: FontRole;
+  tail: Requirement;
+  label: Requirement;
+  /** Draw ⟦ ⟧ marks around the label. */
+  labelBrackets: boolean;
+}
+
+/** Per-render house rules, layered over the profile's defaults. */
+export type StyleOverrides = Partial<Record<LetterStyle, Partial<StyleProfile>>>;
 
 /** Which face each role uses for one render. */
 export interface FontBinding {
-  human: FontId;
-  machine: FontId;
-  machineLabel: FontId;
+  dialogue: FontId;
+  notice: FontId;
+  noticeLabel: FontId;
 }
 
 /**
@@ -153,10 +184,10 @@ export interface BalloonItem {
   speakerId: string;
   shapeId: ShapeId;
   /**
-   * Speaking channel. Selects the typeface, the label casing and the
-   * canon rules the validator enforces. Default: "human".
+   * Lettering register. Selects the silhouette, the typeface, the label casing
+   * and the rules the validator enforces. Default: "dialogue".
    */
-  voice?: Voice;
+  style?: LetterStyle;
   placement: Bounds;
   /**
    * Corner roundness as 0..1 × min(body.w, body.h) / 2.
@@ -211,6 +242,8 @@ export interface RenderOptions {
   profileId: string;
   /** Per-role face overrides for this render, for candidate comparisons. */
   fonts?: Partial<FontBinding>;
+  /** Per-style house rules for this render, layered over the profile. */
+  styles?: StyleOverrides;
 }
 
 export interface RenderResult {

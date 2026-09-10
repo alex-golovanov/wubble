@@ -176,7 +176,7 @@
             "minLength": 1
           }
         },
-        "sourceLabel": {
+        "label": {
           "type": "string",
           "minLength": 1
         }
@@ -258,8 +258,8 @@
             "rect"
           ]
         },
-        "voice": {
-          "$ref": "#/$defs/voice"
+        "style": {
+          "$ref": "#/$defs/style"
         },
         "placement": {
           "$ref": "#/$defs/bounds"
@@ -371,10 +371,10 @@
         }
       }
     },
-    "voice": {
+    "style": {
       "type": "string",
-      "enum": ["human", "machine", "narration"],
-      "description": "Speaking channel: selects typeface, label casing and the canon rules enforced by validation. Default human."
+      "enum": ["dialogue", "notice", "caption"],
+      "description": "Lettering register: which silhouette, typeface and house rules apply. Default dialogue."
     }
   }
 }

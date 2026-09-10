@@ -64,11 +64,11 @@ Exit codes: `0` ok · `1` validation failed · `2` usage/IO · `3` internal.
 ```ts
 import { validatePage, renderPage } from "wubble";
 
-const report = validatePage(manifest, { locale: "en", profileId: "rift-city-proof" });
-const { svg, diagnostics } = renderPage(manifest, { locale: "ru", profileId: "rift-city-proof" });
+const report = validatePage(manifest, { locale: "en", profileId: "wubble-default" });
+const { svg, diagnostics } = renderPage(manifest, { locale: "ru", profileId: "wubble-default" });
 ```
 
-## Shapes (profile `rift-city-proof` @ `0.1.0`)
+## Shapes (profile `wubble-default` @ `0.1.0`)
 
 All registered ids are implemented:
 

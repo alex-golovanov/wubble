@@ -18,7 +18,7 @@ describe("example page-022", () => {
   });
 
   test("every bound role loads bytes matching its registered digest", () => {
-    const roles: FontRole[] = ["human", "machine", "machineLabel"];
+    const roles: FontRole[] = ["dialogue", "notice", "noticeLabel"];
     for (const role of roles) {
       const id = PROFILE.typography.roles[role].fontId;
       const digest = createHash("sha256").update(loadFontBytes(id)).digest("hex");

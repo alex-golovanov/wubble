@@ -9,12 +9,16 @@ import { renderPage, validatePage } from "./index";
 import { serializeDiagnostics, hasErrors } from "./diagnostics";
 import { PROFILE_ID } from "./profile";
 import { compositeProof } from "./proof";
+import { loadRenderConfig } from "./config";
 
 function usage(): never {
   console.error(`Usage:
-  wubble validate <manifest> [--diagnostics <file.json>]
-  wubble render <manifest> --locale <tag> --output <overlay.svg> [--diagnostics <file.json>]
-  wubble proof <manifest> --locale <tag> --art <image> --output <proof.png> [--diagnostics <file.json>]
+  wubble validate <manifest> [--config <config.json>] [--diagnostics <file.json>]
+  wubble render <manifest> --locale <tag> --output <overlay.svg> [--config <config.json>] [--diagnostics <file.json>]
+  wubble proof <manifest> --locale <tag> --art <image> --output <proof.png> [--config <config.json>] [--diagnostics <file.json>]
+
+  --config supplies a project's house rules (per-style tail/label requirements,
+  silhouette and typeface bindings). Without it, wubble's neutral defaults apply.
 `);
   process.exit(2);
 }
@@ -25,6 +29,7 @@ interface CliFlags {
   diagnostics?: string;
   art?: string;
   profile?: string;
+  config?: string;
 }
 
 function isFlagKey(key: string): key is keyof CliFlags {
@@ -33,7 +38,8 @@ function isFlagKey(key: string): key is keyof CliFlags {
     key === "output" ||
     key === "diagnostics" ||
     key === "art" ||
-    key === "profile"
+    key === "profile" ||
+    key === "config"
   );
 }
 
@@ -100,8 +106,19 @@ async function main() {
     const locale = flags.locale ?? "en";
     const profileId = flags.profile ?? PROFILE_ID;
 
+    // A project's house rules and typeface bindings live in its own file.
+    let houseRules = {};
+    if (flags.config) {
+      const loaded = loadRenderConfig(resolve(flags.config));
+      if (loaded.errors.length > 0) {
+        for (const e of loaded.errors) console.error(`config: ${e}`);
+        process.exit(2);
+      }
+      houseRules = loaded.config;
+    }
+
     if (cmd === "validate") {
-      const report = validatePage(manifest, { locale, profileId });
+      const report = validatePage(manifest, { locale, profileId, ...houseRules });
       writeDiagnostics(flags.diagnostics, report);
       if (!report.valid) {
         console.error(
@@ -115,7 +132,7 @@ async function main() {
 
     if (cmd === "render") {
       if (!flags.locale || !flags.output) usage();
-      const result = renderPage(manifest, { locale: flags.locale, profileId });
+      const result = renderPage(manifest, { locale: flags.locale, profileId, ...houseRules });
       writeDiagnostics(flags.diagnostics, result.diagnostics);
       if (hasErrors(result.diagnostics) || result.svg === null) {
         console.error("Render refused: error-level diagnostics present");
@@ -133,7 +150,7 @@ async function main() {
 
     if (cmd === "proof") {
       if (!flags.locale || !flags.art || !flags.output) usage();
-      const result = renderPage(manifest, { locale: flags.locale, profileId });
+      const result = renderPage(manifest, { locale: flags.locale, profileId, ...houseRules });
       writeDiagnostics(flags.diagnostics, result.diagnostics);
       if (hasErrors(result.diagnostics) || result.svg === null) {
         console.error("Proof refused: error-level diagnostics present");

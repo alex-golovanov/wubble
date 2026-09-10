@@ -8,17 +8,40 @@
     "origin": "top-left",
     "units": "art-px"
   },
-  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "renderProfile": {
+    "id": "wubble-default",
+    "version": "0.1.0"
+  },
   "subjects": [
     {
       "id": "a",
-      "bounds": { "x": 200, "y": 900, "width": 160, "height": 160 },
-      "anchors": { "mouth": { "x": 280, "y": 920 } }
+      "bounds": {
+        "x": 200,
+        "y": 900,
+        "width": 160,
+        "height": 160
+      },
+      "anchors": {
+        "mouth": {
+          "x": 280,
+          "y": 920
+        }
+      }
     },
     {
       "id": "b",
-      "bounds": { "x": 1100, "y": 880, "width": 160, "height": 180 },
-      "anchors": { "mouth": { "x": 1180, "y": 900 } }
+      "bounds": {
+        "x": 1100,
+        "y": 880,
+        "width": 160,
+        "height": 180
+      },
+      "anchors": {
+        "mouth": {
+          "x": 1180,
+          "y": 900
+        }
+      }
     }
   ],
   "exclusionZones": [],
@@ -29,16 +52,28 @@
       "panelId": "M-P1",
       "speakerId": "a",
       "shapeId": "speech",
-      "placement": { "x": 120, "y": 200, "width": 480, "height": 260 },
+      "placement": {
+        "x": 120,
+        "y": 200,
+        "width": 480,
+        "height": 260
+      },
       "tail": {
         "subjectId": "a",
         "anchor": "mouth",
         "attachment": "bottom",
-        "bend": { "x": 260, "y": 560 }
+        "bend": {
+          "x": 260,
+          "y": 560
+        }
       },
       "content": {
-        "en": { "lines": ["Left side", "speaking."] },
-        "ru": { "lines": ["Слева", "говорим."] }
+        "en": {
+          "lines": ["Left side", "speaking."]
+        },
+        "ru": {
+          "lines": ["Слева", "говорим."]
+        }
       }
     },
     {
@@ -47,16 +82,28 @@
       "panelId": "M-P1",
       "speakerId": "b",
       "shapeId": "speech",
-      "placement": { "x": 980, "y": 220, "width": 480, "height": 260 },
+      "placement": {
+        "x": 980,
+        "y": 220,
+        "width": 480,
+        "height": 260
+      },
       "tail": {
         "subjectId": "b",
         "anchor": "mouth",
         "attachment": "bottom",
-        "bend": { "x": 1200, "y": 560 }
+        "bend": {
+          "x": 1200,
+          "y": 560
+        }
       },
       "content": {
-        "en": { "lines": ["Right side", "answers."] },
-        "ru": { "lines": ["Справа", "отвечаем."] }
+        "en": {
+          "lines": ["Right side", "answers."]
+        },
+        "ru": {
+          "lines": ["Справа", "отвечаем."]
+        }
       }
     },
     {
