@@ -87,11 +87,16 @@ function tailHalfWidth(body: Bounds, tip: Point, side: Side, rr: number): number
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   const reach = Math.hypot(tip.x - cx, tip.y - cy);
-  const minD = Math.min(body.width, body.height);
-  const wanted = Math.max(minD * 0.1, reach * 0.2);
+  // The base belongs to the balloon, not to the journey — and the two ends of
+  // that journey want different shapes. A speaker inside the panel gets a short
+  // wide wedge; a distant or off-panel speaker gets a long slim pointer, which
+  // is what a wedge stretched that far would stop reading as.
+  const relative = reach / Math.max(1, body.width);
+  const far = Math.max(0, Math.min(1, (relative - 0.8) / 1.6));
+  const wanted = body.width * (0.075 - 0.03 * far);
   const room = Math.max(0, (straightRun(body, side, rr) - 8) / 2);
-  const ceiling = Math.min(minD * 0.42, body.width * 0.32, room);
-  return Math.max(0, Math.min(ceiling, wanted));
+  const ceiling = Math.min(body.height * 0.28, body.width * 0.16, room);
+  return Math.max(0, Math.min(ceiling, Math.max(7, wanted)));
 }
 
 /** Join points on attachment edge. `first`/`second` are in clockwise outline order. */
