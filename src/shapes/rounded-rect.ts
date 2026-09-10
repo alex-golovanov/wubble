@@ -39,14 +39,31 @@ function clamp01(n: number): number {
   return n;
 }
 
-export function resolveAttachmentSide(body: Bounds, tip: Point, attachment: Attachment): Side {
+/** Length of the flat run on one side, once the corner arcs are removed. */
+function straightRun(body: Bounds, side: Side, rr: number): number {
+  const along = side === "top" || side === "bottom" ? body.width : body.height;
+  return Math.max(0, along - rr * 2);
+}
+
+export function resolveAttachmentSide(
+  body: Bounds,
+  tip: Point,
+  attachment: Attachment,
+  rr = 0,
+): Side {
   if (attachment !== "auto") return attachment;
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   const dx = tip.x - cx;
   const dy = tip.y - cy;
-  if (Math.abs(dx) > Math.abs(dy)) return dx >= 0 ? "right" : "left";
-  return dy >= 0 ? "bottom" : "top";
+  const horizontal: Side = dx >= 0 ? "right" : "left";
+  const vertical: Side = dy >= 0 ? "bottom" : "top";
+  const preferred = Math.abs(dx) > Math.abs(dy) ? horizontal : vertical;
+  const other = preferred === horizontal ? vertical : horizontal;
+  // A rounded balloon can have almost no flat edge on its short side; a tail
+  // rooted there would have to cut into the corner arc.
+  if (straightRun(body, preferred, rr) < straightRun(body, other, rr) * 0.6) return other;
+  return preferred;
 }
 
 function radiusPx(body: Bounds, cornerRadius: number, edge: EdgeStyle): number {
@@ -61,15 +78,20 @@ function radiusPx(body: Bounds, cornerRadius: number, edge: EdgeStyle): number {
 /**
  * Tail base, scaled to how far the tail has to travel. A long tail drawn on a
  * narrow base reads as a needle; comic tails widen as they reach.
+ *
+ * The base can never be wider than the flat run it leaves from — beyond that
+ * the join points fall inside the corner arc and the outline folds back on
+ * itself.
  */
-function tailHalfWidth(body: Bounds, tip: Point): number {
+function tailHalfWidth(body: Bounds, tip: Point, side: Side, rr: number): number {
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   const reach = Math.hypot(tip.x - cx, tip.y - cy);
   const minD = Math.min(body.width, body.height);
-  const floor = minD * 0.1;
-  const ceiling = Math.min(minD * 0.34, body.width * 0.3);
-  return Math.max(10, Math.min(ceiling, Math.max(floor, reach * 0.2)));
+  const wanted = Math.max(minD * 0.1, reach * 0.2);
+  const room = Math.max(0, (straightRun(body, side, rr) - 8) / 2);
+  const ceiling = Math.min(minD * 0.42, body.width * 0.32, room);
+  return Math.max(0, Math.min(ceiling, wanted));
 }
 
 /** Join points on attachment edge. `first`/`second` are in clockwise outline order. */
@@ -77,13 +99,16 @@ function joinClockwise(
   body: Bounds,
   side: Side,
   tip: Point,
+  rr: number,
 ): { first: Point; second: Point; mid: Point } {
-  const hw = tailHalfWidth(body, tip);
+  const hw = tailHalfWidth(body, tip, side, rr);
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   switch (side) {
     case "bottom": {
-      const ideal = Math.max(body.x + hw + 4, Math.min(body.x + body.width - hw - 4, tip.x));
+      const lo = body.x + rr + hw + 4;
+      const hi = body.x + body.width - rr - hw - 4;
+      const ideal = lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, tip.x));
       const midX = ideal * 0.65 + cx * 0.35;
       const y = body.y + body.height;
       return {
@@ -93,7 +118,9 @@ function joinClockwise(
       };
     }
     case "top": {
-      const ideal = Math.max(body.x + hw + 4, Math.min(body.x + body.width - hw - 4, tip.x));
+      const lo = body.x + rr + hw + 4;
+      const hi = body.x + body.width - rr - hw - 4;
+      const ideal = lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, tip.x));
       const midX = ideal * 0.65 + cx * 0.35;
       const y = body.y;
       // Clockwise top edge runs left → right.
@@ -104,7 +131,9 @@ function joinClockwise(
       };
     }
     case "right": {
-      const ideal = Math.max(body.y + hw + 4, Math.min(body.y + body.height - hw - 4, tip.y));
+      const lo = body.y + rr + hw + 4;
+      const hi = body.y + body.height - rr - hw - 4;
+      const ideal = lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, tip.y));
       const midY = ideal * 0.65 + cy * 0.35;
       const x = body.x + body.width;
       // Clockwise on right: top → bottom. first=upper, second=lower
@@ -115,7 +144,9 @@ function joinClockwise(
       };
     }
     case "left": {
-      const ideal = Math.max(body.y + hw + 4, Math.min(body.y + body.height - hw - 4, tip.y));
+      const lo = body.y + rr + hw + 4;
+      const hi = body.y + body.height - rr - hw - 4;
+      const ideal = lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, tip.y));
       const midY = ideal * 0.65 + cy * 0.35;
       const x = body.x;
       // Clockwise on left: bottom → top. first=lower, second=upper
@@ -313,8 +344,8 @@ function singleBodyPath(
   const x1 = body.x + body.width;
   const y1 = body.y + body.height;
 
-  const side = tip ? resolveAttachmentSide(body, tip, attachment) : null;
-  const join = tip && side ? joinClockwise(body, side, tip) : null;
+  const side = tip ? resolveAttachmentSide(body, tip, attachment, rr) : null;
+  const join = tip && side ? joinClockwise(body, side, tip, rr) : null;
 
   const cmds: Cmd[] = [];
   cmds.push({ t: "M", p: { x: x0 + rr, y: y0 } });
@@ -434,9 +465,9 @@ function chainedPath(
 
   // Top edge (+ optional top tail)
   if (tailIdx === 0 && tip) {
-    const side = resolveAttachmentSide(top, tip, attachment);
+    const side = resolveAttachmentSide(top, tip, attachment, rTop);
     if (side === "top") {
-      const j = joinClockwise(top, side, tip);
+      const j = joinClockwise(top, side, tip, rTop);
       edgeTo(cmds, { x: top.x + rTop, y: top.y }, j.first, edge, top);
       pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
       edgeTo(cmds, j.second, { x: top.x + top.width - rTop, y: top.y }, edge, top);
@@ -476,8 +507,8 @@ function chainedPath(
     const rightTop = { x: b.x + b.width, y: b.y + r };
     const rightBot = { x: b.x + b.width, y: b.y + b.height - r };
 
-    if (i === tailIdx && tip && resolveAttachmentSide(b, tip, attachment) === "right") {
-      const j = joinClockwise(b, "right", tip);
+    if (i === tailIdx && tip && resolveAttachmentSide(b, tip, attachment, r) === "right") {
+      const j = joinClockwise(b, "right", tip, r);
       edgeTo(cmds, rightTop, j.first, edge, b);
       pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
       edgeTo(cmds, j.second, rightBot, edge, b);
@@ -516,9 +547,9 @@ function chainedPath(
     if (
       tailIdx === lobes.length - 1 &&
       tip &&
-      resolveAttachmentSide(b, tip, attachment) === "bottom"
+      resolveAttachmentSide(b, tip, attachment, r) === "bottom"
     ) {
-      const j = joinClockwise(b, "bottom", tip);
+      const j = joinClockwise(b, "bottom", tip, r);
       edgeTo(cmds, bottomRight, j.first, edge, b);
       pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
       edgeTo(cmds, j.second, bottomLeft, edge, b);
@@ -535,8 +566,8 @@ function chainedPath(
     const leftBot = { x: b.x, y: b.y + b.height - r };
     const leftTop = { x: b.x, y: b.y + r };
 
-    if (i === tailIdx && tip && resolveAttachmentSide(b, tip, attachment) === "left") {
-      const j = joinClockwise(b, "left", tip);
+    if (i === tailIdx && tip && resolveAttachmentSide(b, tip, attachment, r) === "left") {
+      const j = joinClockwise(b, "left", tip, r);
       edgeTo(cmds, leftBot, j.first, edge, b);
       pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
       edgeTo(cmds, j.second, leftTop, edge, b);
