@@ -6,7 +6,7 @@ import { serializeDiagnostics } from "../src/diagnostics";
 import { PROFILE_ID } from "../src/profile";
 
 const root = join(import.meta.dir, "..");
-const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
+const load = (p: string): unknown => JSON.parse(readFileSync(join(root, p), "utf8"));
 
 describe("diagnostics serialization", () => {
   test("deterministic diagnostic JSON", () => {

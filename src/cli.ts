@@ -19,20 +19,43 @@ function usage(): never {
   process.exit(2);
 }
 
+interface CliFlags {
+  locale?: string;
+  output?: string;
+  diagnostics?: string;
+  art?: string;
+  profile?: string;
+}
+
+function isFlagKey(key: string): key is keyof CliFlags {
+  return (
+    key === "locale" ||
+    key === "output" ||
+    key === "diagnostics" ||
+    key === "art" ||
+    key === "profile"
+  );
+}
+
 function parseArgs(argv: string[]) {
   const args = argv.slice(2);
   const cmd = args[0];
   if (!cmd || cmd === "-h" || cmd === "--help") usage();
 
   const positional: string[] = [];
-  const flags: Record<string, string> = {};
+  const flags: CliFlags = {};
   for (let i = 1; i < args.length; i++) {
-    const a = args[i]!;
+    const a = args[i];
+    if (a === undefined) break;
     if (a.startsWith("--")) {
       const key = a.slice(2);
       const val = args[i + 1];
       if (!val || val.startsWith("--")) {
         console.error(`Missing value for --${key}`);
+        process.exit(2);
+      }
+      if (!isFlagKey(key)) {
+        console.error(`Unknown flag --${key}`);
         process.exit(2);
       }
       flags[key] = val;
@@ -47,7 +70,8 @@ function parseArgs(argv: string[]) {
 function loadManifest(path: string): unknown {
   try {
     const text = readFileSync(path, "utf8");
-    return JSON.parse(text) as unknown;
+    const parsed: unknown = JSON.parse(text);
+    return parsed;
   } catch (e) {
     console.error(`Cannot read/parse manifest: ${path}`);
     console.error(e instanceof Error ? e.message : e);

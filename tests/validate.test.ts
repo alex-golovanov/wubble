@@ -5,7 +5,7 @@ import { validatePage } from "../src/index";
 import { PROFILE_ID, isShapeImplemented } from "../src/profile";
 
 const root = join(import.meta.dir, "..");
-const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
+const load = (p: string): unknown => JSON.parse(readFileSync(join(root, p), "utf8"));
 
 describe("validatePage", () => {
   test("example manifest validates for en and ru", () => {
@@ -37,7 +37,8 @@ describe("validatePage", () => {
     expect(r.valid).toBe(false);
     const d = r.diagnostics.find((x) => x.code === "TEXT_OVERFLOW");
     expect(d).toBeDefined();
-    expect(d!.itemId).toBe("P022-02-B01");
+    if (d === undefined) throw new Error("expected TEXT_OVERFLOW");
+    expect(d.itemId).toBe("P022-02-B01");
   });
 
   test("HARD_EXCLUSION_OVERLAP", () => {

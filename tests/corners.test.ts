@@ -5,9 +5,10 @@ import { renderPage, validatePage } from "../src/index";
 import { PROFILE_ID } from "../src/profile";
 import { fitBalloonText, resolveLetteringPads, resolveShapePadding } from "../src/layout";
 import { buildRoundedBalloonPath, pathHasPointNear } from "../src/shapes/rounded-rect";
+import { requireFitted, requireSvg } from "./helpers";
 
 const root = join(import.meta.dir, "..");
-const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
+const load = (p: string): unknown => JSON.parse(readFileSync(join(root, p), "utf8"));
 
 describe("cornerRadius + edge", () => {
   test("radius 0 vs 1 produce different corners on same body", () => {
@@ -72,12 +73,12 @@ describe("cornerRadius + edge", () => {
     const v = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(v.valid).toBe(true);
     const r = renderPage(m, { locale: "en", profileId: PROFILE_ID });
-    expect(r.svg).not.toBeNull();
-    expect(r.svg!).toContain('id="C-R0"');
-    expect(r.svg!).toContain('id="C-R5"');
-    expect(r.svg!).toContain('id="C-R1"');
-    expect(r.svg!).toContain('id="C-JAG"');
-    expect(r.svg!).toContain("robot");
+    const svg = requireSvg(r);
+    expect(svg).toContain('id="C-R0"');
+    expect(svg).toContain('id="C-R5"');
+    expect(svg).toContain('id="C-R1"');
+    expect(svg).toContain('id="C-JAG"');
+    expect(svg).toContain("robot");
   });
 });
 
@@ -87,8 +88,7 @@ describe("chained multi-bubbles", () => {
     const v = validatePage(m, { locale: "en", profileId: PROFILE_ID });
     expect(v.valid).toBe(true);
     const r = renderPage(m, { locale: "en", profileId: PROFILE_ID });
-    expect(r.svg).not.toBeNull();
-    const svg = r.svg!;
+    const svg = requireSvg(r);
     expect(svg).toContain('id="CH-01"');
     expect(svg).toContain("First beat");
     expect(svg).toContain("middle");
@@ -139,15 +139,13 @@ describe("cornerRadius lettering density", () => {
       cornerRadius: 0,
       edge: "smooth",
     });
-    expect(soft.fitted).not.toBeNull();
-    expect(square.fitted).not.toBeNull();
+    const softFit = requireFitted(soft.fitted);
+    const squareFit = requireFitted(square.fitted);
     // Soft usable area is smaller: either larger body at same type, or type steps down first.
-    expect(soft.fitted!.fontSize).toBeLessThanOrEqual(square.fitted!.fontSize);
-    if (soft.fitted!.fontSize === square.fitted!.fontSize) {
-      expect(soft.fitted!.bodyBounds.width).toBeGreaterThanOrEqual(square.fitted!.bodyBounds.width);
-      expect(soft.fitted!.bodyBounds.height).toBeGreaterThanOrEqual(
-        square.fitted!.bodyBounds.height,
-      );
+    expect(softFit.fontSize).toBeLessThanOrEqual(squareFit.fontSize);
+    if (softFit.fontSize === squareFit.fontSize) {
+      expect(softFit.bodyBounds.width).toBeGreaterThanOrEqual(squareFit.bodyBounds.width);
+      expect(softFit.bodyBounds.height).toBeGreaterThanOrEqual(squareFit.bodyBounds.height);
     }
   });
 

@@ -20,7 +20,8 @@
     "fmt:check": "oxfmt --check .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "check": "bun run typecheck && bun run lint && bun run fmt:check"
+    "check": "bun run typecheck && bun run lint && bun run assertions && bun run fmt:check",
+    "assertions": "bun run scripts/check-no-assertions.mjs"
   },
   "dependencies": {
     "ajv": "^8.17.1",

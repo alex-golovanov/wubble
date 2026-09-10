@@ -45,9 +45,9 @@ export function buildShape(input: ShapeBuildInput): ShapeGeometry {
     attachment: input.attachment,
     cornerRadius: style.cornerRadius,
     edge: style.edge,
-    notchTop: input.notchTop,
-    fill: input.fill,
-    stroke: input.stroke,
-    strokeWidth: input.strokeWidth,
+    ...(input.notchTop !== undefined ? { notchTop: input.notchTop } : {}),
+    ...(input.fill !== undefined ? { fill: input.fill } : {}),
+    ...(input.stroke !== undefined ? { stroke: input.stroke } : {}),
+    ...(input.strokeWidth !== undefined ? { strokeWidth: input.strokeWidth } : {}),
   });
 }

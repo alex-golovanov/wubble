@@ -1,6 +1,6 @@
 import { diag, makeReport } from "./diagnostics";
 import { validateSchema } from "./schema";
-import { fitBalloonText } from "./layout";
+import { fitBalloonText, fitStyleOf } from "./layout";
 import { isShapeImplemented, PROFILE, PROFILE_ID } from "./profile";
 import { boundsInside, rectsOverlap, segmentCrossesBounds } from "./collisions";
 import type {
@@ -27,23 +27,24 @@ function resolveAnchor(
   manifest: PageManifest,
   item: BalloonItem,
 ): { tip: Point | null; error: Diagnostic | null } {
-  if (!item.tail) return { tip: null, error: null };
-  const subject = manifest.subjects.find((s) => s.id === item.tail!.subjectId);
+  const tail = item.tail;
+  if (!tail) return { tip: null, error: null };
+  const subject = manifest.subjects.find((s) => s.id === tail.subjectId);
   if (!subject) {
     return {
       tip: null,
-      error: diag("UNKNOWN_ANCHOR", `Subject "${item.tail.subjectId}" not found for tail.`, {
+      error: diag("UNKNOWN_ANCHOR", `Subject "${tail.subjectId}" not found for tail.`, {
         itemId: item.id,
       }),
     };
   }
-  const tip = subject.anchors[item.tail.anchor];
+  const tip = subject.anchors[tail.anchor];
   if (!tip) {
     return {
       tip: null,
       error: diag(
         "UNKNOWN_ANCHOR",
-        `Anchor "${item.tail.anchor}" not found on subject "${item.tail.subjectId}".`,
+        `Anchor "${tail.anchor}" not found on subject "${tail.subjectId}".`,
         { itemId: item.id },
       ),
     };
@@ -109,7 +110,7 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
     }
 
     const placement = resolvePlacement(item, locale);
-    const fitStyle = { cornerRadius: item.cornerRadius, edge: item.edge };
+    const fitStyle = fitStyleOf(item);
     const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle);
     diagnostics.push(...layout.diagnostics);
     if (!layout.fitted) continue;
@@ -128,7 +129,8 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
     // Chained lobes (geometry fused; each lobe still must fit its locale text)
     if (item.lobes) {
       for (let li = 0; li < item.lobes.length; li++) {
-        const lobe = item.lobes[li]!;
+        const lobe = item.lobes[li];
+        if (lobe === undefined) continue;
         const lobeContent = lobe.content[locale];
         if (!lobeContent) {
           diagnostics.push(
@@ -187,12 +189,16 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
   const ids = [...bodyBoundsByItem.keys()];
   for (let i = 0; i < ids.length; i++) {
     for (let j = i + 1; j < ids.length; j++) {
-      const a = bodyBoundsByItem.get(ids[i]!)!;
-      const b = bodyBoundsByItem.get(ids[j]!)!;
+      const idA = ids[i];
+      const idB = ids[j];
+      if (idA === undefined || idB === undefined) continue;
+      const a = bodyBoundsByItem.get(idA);
+      const b = bodyBoundsByItem.get(idB);
+      if (a === undefined || b === undefined) continue;
       if (rectsOverlap(a, b)) {
         diagnostics.push(
-          diag("BALLOON_OVERLAP", `Balloons "${ids[i]}" and "${ids[j]}" overlap.`, {
-            itemId: ids[i],
+          diag("BALLOON_OVERLAP", `Balloons "${idA}" and "${idB}" overlap.`, {
+            itemId: idA,
           }),
         );
       }
@@ -231,8 +237,11 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
   // Reading order: if later item is clearly above+left of earlier, warn
   const balloonItems = manifest.items.filter((i): i is BalloonItem => i.kind === "balloon");
   for (let i = 0; i < balloonItems.length - 1; i++) {
-    const a = bodyBoundsByItem.get(balloonItems[i]!.id);
-    const b = bodyBoundsByItem.get(balloonItems[i + 1]!.id);
+    const itemA = balloonItems[i];
+    const itemB = balloonItems[i + 1];
+    if (itemA === undefined || itemB === undefined) continue;
+    const a = bodyBoundsByItem.get(itemA.id);
+    const b = bodyBoundsByItem.get(itemB.id);
     if (!a || !b) continue;
     const aCy = a.y + a.height / 2;
     const bCy = b.y + b.height / 2;
@@ -240,8 +249,8 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
       diagnostics.push(
         diag(
           "READING_ORDER_AMBIGUOUS",
-          `Item order may conflict with geometry between "${balloonItems[i]!.id}" and "${balloonItems[i + 1]!.id}".`,
-          { itemId: balloonItems[i]!.id },
+          `Item order may conflict with geometry between "${itemA.id}" and "${itemB.id}".`,
+          { itemId: itemA.id },
         ),
       );
     }

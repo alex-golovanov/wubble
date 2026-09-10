@@ -10,6 +10,7 @@
 
 import { fmt, roundN } from "../normalize";
 import type { Bounds, Point } from "../types";
+import { at } from "../util";
 
 export type EdgeStyle = "smooth" | "jagged";
 export type Attachment = "top" | "right" | "bottom" | "left" | "auto";
@@ -331,14 +332,14 @@ function chainedPath(
 ): string {
   const lobes = [...bodiesIn].sort((a, b) => a.y + a.height / 2 - (b.y + b.height / 2));
   if (lobes.length === 1) {
-    return singleBodyPath(lobes[0]!, tip, bend, attachment, cornerRadius, edge);
+    return singleBodyPath(at(lobes, 0, "lobes"), tip, bend, attachment, cornerRadius, edge);
   }
 
   let tailIdx = lobes.length - 1;
   if (tip) {
     let best = Infinity;
     for (let i = 0; i < lobes.length; i++) {
-      const b = lobes[i]!;
+      const b = at(lobes, i, "lobes");
       const d = Math.hypot(tip.x - (b.x + b.width / 2), tip.y - (b.y + b.height / 2));
       if (d < best) {
         best = d;
@@ -353,8 +354,8 @@ function chainedPath(
   type Neck = { mid: number; half: number; yTop: number; yBot: number };
   const necks: Neck[] = [];
   for (let i = 0; i < lobes.length - 1; i++) {
-    const a = lobes[i]!;
-    const b = lobes[i + 1]!;
+    const a = at(lobes, i, "lobes");
+    const b = at(lobes, i + 1, "lobes");
     let yTop = a.y + a.height;
     let yBot = b.y;
     // Layout expand can close the authored gap — keep a readable neck band
@@ -372,7 +373,7 @@ function chainedPath(
   }
 
   const cmds: Cmd[] = [];
-  const top = lobes[0]!;
+  const top = at(lobes, 0, "lobes");
   const rTop = rOf(top);
 
   // Start top-left of top lobe
@@ -408,13 +409,13 @@ function chainedPath(
 
   // RIGHT descent through all lobes
   for (let i = 0; i < lobes.length; i++) {
-    const b = lobes[i]!;
+    const b = at(lobes, i, "lobes");
     const r = rOf(b);
 
     // Vertical right edge of this lobe
     if (i > 0) {
       // Arrive at top edge via neck; go to top-right corner and arc down
-      const n = necks[i - 1]!;
+      const n = at(necks, i - 1, "necks");
       edgeTo(cmds, { x: n.mid + n.half, y: n.yBot }, { x: b.x + b.width - r, y: b.y }, edge, b);
       arcCorner(cmds, r, { x: b.x + b.width, y: b.y + r });
     }
@@ -433,7 +434,7 @@ function chainedPath(
 
     if (i < lobes.length - 1) {
       arcCorner(cmds, r, { x: b.x + b.width - r, y: b.y + b.height });
-      const n = necks[i]!;
+      const n = at(necks, i, "necks");
       edgeTo(
         cmds,
         { x: b.x + b.width - r, y: b.y + b.height },
@@ -454,7 +455,7 @@ function chainedPath(
 
   // BOTTOM of last lobe
   {
-    const b = lobes[lobes.length - 1]!;
+    const b = at(lobes, lobes.length - 1, "lobes");
     const r = rOf(b);
     const bottomRight = { x: b.x + b.width - r, y: b.y + b.height };
     const bottomLeft = { x: b.x + r, y: b.y + b.height };
@@ -476,7 +477,7 @@ function chainedPath(
 
   // LEFT ascent through all lobes
   for (let i = lobes.length - 1; i >= 0; i--) {
-    const b = lobes[i]!;
+    const b = at(lobes, i, "lobes");
     const r = rOf(b);
     const leftBot = { x: b.x, y: b.y + b.height - r };
     const leftTop = { x: b.x, y: b.y + r };
@@ -492,10 +493,10 @@ function chainedPath(
 
     if (i > 0) {
       arcCorner(cmds, r, { x: b.x + r, y: b.y });
-      const n = necks[i - 1]!;
+      const n = at(necks, i - 1, "necks");
       edgeTo(cmds, { x: b.x + r, y: b.y }, { x: n.mid - n.half, y: n.yBot }, edge, b);
       // Neck left side up
-      const prev = lobes[i - 1]!;
+      const prev = at(lobes, i - 1, "lobes");
       cmds.push({
         t: "Q",
         c: { x: n.mid - n.half - 6, y: (n.yTop + n.yBot) / 2 },
@@ -523,7 +524,7 @@ export function buildRoundedBalloonPath(input: RoundedBalloonInput): string {
   if (bodies.length === 0) return "M 0 0 Z";
   if (bodies.length === 1) {
     return singleBodyPath(
-      bodies[0]!,
+      at(bodies, 0, "bodies"),
       input.tip,
       input.bend,
       input.attachment,
@@ -551,7 +552,7 @@ export function pathHasPointNear(path: string, x: number, y: number, tol = 1.5):
   // Scan consecutive pairs — false positives possible with arc radii, so also
   // check known command forms.
   for (let i = 0; i + 1 < nums.length; i++) {
-    if (Math.abs(nums[i]! - x) <= tol && Math.abs(nums[i + 1]! - y) <= tol) {
+    if (Math.abs(at(nums, i, "nums") - x) <= tol && Math.abs(at(nums, i + 1, "nums") - y) <= tol) {
       return true;
     }
   }

@@ -1,0 +1,16 @@
+---
+description: Maximally strict TypeScript — no assertions, no as const, no non-null !
+globs:
+  - "src/**/*.ts"
+  - "tests/**/*.ts"
+  - "tsconfig.json"
+alwaysApply: true
+---
+
+# TypeScript strict (wubble)
+
+- Keep `tsconfig.json` at maximum strictness (see root `AGENTS.md`).
+- **Forbidden:** `as T`, `as const`, non-null `!`.
+- **Required:** `satisfies SomeType` for literals; type guards; proper annotations; `fitStyleOf` / omit-undefined for exact optionals.
+- No `.ts` extensions in imports.
+- `bun run check` must stay green.

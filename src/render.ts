@@ -1,6 +1,6 @@
 import { validateSchema } from "./schema";
 import { resolveAnchor, resolveBend, resolvePlacement, validatePage } from "./validate";
-import { fitBalloonText, resolveLetteringPads } from "./layout";
+import { fitBalloonText, fitStyleOf, resolveLetteringPads } from "./layout";
 import { buildShape } from "./shapes/index";
 import { isRefShapeId, refLobeContentBand, contentBandBox } from "./shapes/ref-sheet";
 import { fontBase64, isShapeImplemented } from "./profile";
@@ -28,7 +28,7 @@ function textNodesFor(
   body: Bounds,
   shapeId: BalloonItem["shapeId"],
   fill: string,
-  style?: { cornerRadius?: number; edge?: BalloonItem["edge"] },
+  style?: import("./layout").FitStyle,
 ): string {
   const box = fitted.textBounds ?? body;
   // Ref shapes ignore style (bands already encode silhouette); rounded-rect uses it.
@@ -57,7 +57,7 @@ function renderBalloonGroup(
   if (!content) return null;
 
   const placement = resolvePlacement(item, locale);
-  const fitStyle = { cornerRadius: item.cornerRadius, edge: item.edge };
+  const fitStyle = fitStyleOf(item);
   const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle);
   if (!layout.fitted) return null;
 
@@ -65,7 +65,8 @@ function renderBalloonGroup(
   const lobeFits: { body: Bounds; fitted: FittedText }[] = [];
   if (item.lobes) {
     for (let i = 0; i < item.lobes.length; i++) {
-      const lobe = item.lobes[i]!;
+      const lobe = item.lobes[i];
+      if (lobe === undefined) continue;
       const lobeContent = lobe.content[locale];
       if (!lobeContent) continue;
 
@@ -108,12 +109,11 @@ function renderBalloonGroup(
     tip,
     bend,
     attachment,
-    cornerRadius: item.cornerRadius,
-    edge: item.edge,
-    notchTop: item.notchTop,
-    fill: item.fill,
-    stroke: item.stroke,
-    strokeWidth: item.strokeWidth,
+    ...fitStyleOf(item),
+    ...(item.notchTop !== undefined ? { notchTop: item.notchTop } : {}),
+    ...(item.fill !== undefined ? { fill: item.fill } : {}),
+    ...(item.stroke !== undefined ? { stroke: item.stroke } : {}),
+    ...(item.strokeWidth !== undefined ? { strokeWidth: item.strokeWidth } : {}),
   });
 
   const parts: string[] = [];

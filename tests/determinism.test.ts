@@ -4,9 +4,10 @@ import { join } from "node:path";
 import { renderPage } from "../src/index";
 import { serializeDiagnostics } from "../src/diagnostics";
 import { PROFILE_ID } from "../src/profile";
+import { requireSvg } from "./helpers";
 
 const root = join(import.meta.dir, "..");
-const load = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
+const load = (p: string): unknown => JSON.parse(readFileSync(join(root, p), "utf8"));
 
 describe("determinism", () => {
   test("two consecutive renders are byte-identical", () => {
@@ -26,9 +27,8 @@ describe("determinism", () => {
 
   test("SVG uses LF and fixed precision", () => {
     const m = load("examples/page-022.json");
-    const { svg } = renderPage(m, { locale: "en", profileId: PROFILE_ID });
-    expect(svg).not.toBeNull();
-    expect(svg!.includes("\r")).toBe(false);
-    expect(svg!).toMatch(/\d+\.\d{2}/);
+    const svg = requireSvg(renderPage(m, { locale: "en", profileId: PROFILE_ID }));
+    expect(svg.includes("\r")).toBe(false);
+    expect(svg).toMatch(/\d+\.\d{2}/);
   });
 });

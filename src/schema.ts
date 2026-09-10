@@ -8,7 +8,19 @@ import type { PageManifest } from "./types";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const schemaPath = join(ROOT, "schemas/page.schema.json");
 
-const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as object;
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function loadSchemaObject(): object {
+  const raw: unknown = JSON.parse(readFileSync(schemaPath, "utf8"));
+  if (!isPlainObject(raw)) {
+    throw new Error(`Schema at ${schemaPath} must be a JSON object`);
+  }
+  return raw;
+}
+
+const schema = loadSchemaObject();
 
 const ajv = new Ajv2020({
   allErrors: true,
@@ -27,12 +39,25 @@ export interface SchemaResult {
 
 /** Strip non-contract keys (e.g. $schema) before validation */
 function prepare(input: unknown): unknown {
-  if (input === null || typeof input !== "object" || Array.isArray(input)) {
+  if (!isPlainObject(input)) {
     return input;
   }
-  const obj = { ...(input as Record<string, unknown>) };
-  delete obj.$schema;
+  const obj: Record<string, unknown> = { ...input };
+  delete obj["$schema"];
   return obj;
+}
+
+/** Structural gate after AJV success — avoids type assertions. */
+function isPageManifest(value: unknown): value is PageManifest {
+  if (!isPlainObject(value)) return false;
+  if (value["schemaVersion"] !== "0.1.0") return false;
+  if (typeof value["pageId"] !== "string") return false;
+  if (!isPlainObject(value["coordinateSpace"])) return false;
+  if (!isPlainObject(value["renderProfile"])) return false;
+  if (!Array.isArray(value["subjects"])) return false;
+  if (!Array.isArray(value["exclusionZones"])) return false;
+  if (!Array.isArray(value["items"])) return false;
+  return true;
 }
 
 export function validateSchema(input: unknown): SchemaResult {
@@ -45,5 +70,12 @@ export function validateSchema(input: unknown): SchemaResult {
     });
     return { ok: false, errors, manifest: null };
   }
-  return { ok: true, errors: [], manifest: prepared as PageManifest };
+  if (!isPageManifest(prepared)) {
+    return {
+      ok: false,
+      errors: ["validated JSON failed PageManifest structural check"],
+      manifest: null,
+    };
+  }
+  return { ok: true, errors: [], manifest: prepared };
 }

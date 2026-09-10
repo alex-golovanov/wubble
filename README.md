@@ -22,16 +22,19 @@ Requires [Bun](https://bun.sh) ≥ 1.3.
 
 ## Check / lint / format
 
-Uses **TypeScript** (`tsc --noEmit`), **oxlint** (with type-aware rules via `oxlint-tsgolint`), and **oxfmt**.
+Uses **TypeScript** (`tsc --noEmit`, maximally strict — see `tsconfig.json` / `AGENTS.md`), **oxlint** (type-aware via `oxlint-tsgolint`), **oxfmt**, and an assertion ban script.
 
 ```sh
-bun run typecheck   # tsc --noEmit
-bun run lint        # oxlint .  (type-aware; typescript/dot-notation enforced)
-bun run lint:fix   # oxlint --fix .
-bun run fmt         # oxfmt .
-bun run fmt:check   # oxfmt --check .
-bun run check       # typecheck + lint + fmt:check
+bun run typecheck    # tsc --noEmit
+bun run lint         # oxlint .  (bans `as` assertions + non-null `!`)
+bun run lint:fix    # oxlint --fix .
+bun run assertions   # fail on `as const` / `as T` / `!` in src+tests
+bun run fmt          # oxfmt .
+bun run fmt:check    # oxfmt --check .
+bun run check        # typecheck + lint + assertions + fmt:check
 ```
+
+TypeScript style for agents: **no** `as T`, **no** `as const`, **no** non-null `!` — use `satisfies`, type guards, and narrowing (`AGENTS.md`, `.cursor/rules/typescript-strict.mdc`).
 
 `typescript/dot-notation` rejects `PROFILE.shapes["speech"]`-style string indexing — use `PROFILE.shapes.speech` or `shapeProfile(id)`.
 

@@ -5,15 +5,16 @@ import { roundN } from "./normalize";
 
 let cachedFont: Font | null = null;
 
+function bufferToArrayBuffer(bytes: Buffer): ArrayBuffer {
+  const ab = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(ab).set(bytes);
+  return ab;
+}
+
 export function getFont(): Font {
   if (cachedFont) return cachedFont;
   const bytes = loadFontBytes();
-  // opentype.js accepts ArrayBuffer
-  const ab = bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-  const font = opentype.parse(ab);
+  const font = opentype.parse(bufferToArrayBuffer(bytes));
   cachedFont = font;
   return font;
 }

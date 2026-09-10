@@ -43,6 +43,14 @@ export interface FitStyle {
   edge?: EdgeStyle;
 }
 
+/** Optional knobs only — omits keys when undefined (`exactOptionalPropertyTypes`). */
+export function fitStyleOf(item: { cornerRadius?: number; edge?: EdgeStyle }): FitStyle {
+  const style: FitStyle = {};
+  if (item.cornerRadius !== undefined) style.cornerRadius = item.cornerRadius;
+  if (item.edge !== undefined) style.edge = item.edge;
+  return style;
+}
+
 function resolveFitStyle(
   shapeId: ShapeId,
   style?: FitStyle,
