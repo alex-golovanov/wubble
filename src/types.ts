@@ -16,7 +16,8 @@ export type DiagnosticCode =
   | "BALLOON_OVERLAP"
   | "SOFT_EXCLUSION_OVERLAP"
   | "TAIL_CROSSES_BODY"
-  | "READING_ORDER_AMBIGUOUS";
+  | "READING_ORDER_AMBIGUOUS"
+  | "VOICE_RULE";
 
 export interface DiagnosticSuggestion {
   field: string;
@@ -101,8 +102,40 @@ export type ShapeId =
   | "thought"
   | "rect";
 
-/** Outline treatment — smooth comic stroke vs angular/jagged outline. */
-export type EdgeStyle = "smooth" | "jagged";
+/**
+ * Outline treatment.
+ * smooth — even machine curve; jagged — angular teeth;
+ * hand — smooth curve with a small deterministic wobble, so the outline
+ * reads as drawn rather than constructed.
+ */
+export type EdgeStyle = "smooth" | "jagged" | "hand";
+
+/**
+ * Who is speaking, as a channel rather than a styling choice.
+ * human    — a person; rounded hand-drawn balloon with a tail.
+ * machine  — played-back recording; square, source-tagged, never tailed.
+ * narration — caption box; no speaker, no tail.
+ */
+export type Voice = "human" | "machine" | "narration";
+
+/** Registered font assets. Nothing outside this union can be loaded. */
+export type FontId =
+  | "shantell-sans-semibold"
+  | "noto-sans-regular"
+  | "jetbrains-mono-regular"
+  | "ibm-plex-mono-regular"
+  | "roboto-mono-regular"
+  | "oswald-medium";
+
+/** A lettering role. Roles, not characters, own a typeface. */
+export type FontRole = "human" | "machine" | "machineLabel";
+
+/** Which face each role uses for one render. */
+export interface FontBinding {
+  human: FontId;
+  machine: FontId;
+  machineLabel: FontId;
+}
 
 /**
  * Extra lobe in a chained multi-bubble.
@@ -119,6 +152,11 @@ export interface BalloonItem {
   panelId: string;
   speakerId: string;
   shapeId: ShapeId;
+  /**
+   * Speaking channel. Selects the typeface, the label casing and the
+   * canon rules the validator enforces. Default: "human".
+   */
+  voice?: Voice;
   placement: Bounds;
   /**
    * Corner roundness as 0..1 × min(body.w, body.h) / 2.
@@ -171,6 +209,8 @@ export interface PageManifest {
 export interface RenderOptions {
   locale: Locale;
   profileId: string;
+  /** Per-role face overrides for this render, for candidate comparisons. */
+  fonts?: Partial<FontBinding>;
 }
 
 export interface RenderResult {

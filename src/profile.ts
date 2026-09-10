@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ShapeId } from "./types";
+import type { FontBinding, FontId, FontRole, ShapeId, Voice } from "./types";
+
+export type { FontBinding, FontId, FontRole } from "./types";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -35,16 +37,92 @@ export interface ShapeProfile extends FitParams {
   strokeWidth: number;
 }
 
+export type FontFormat = "opentype" | "truetype";
+
+export interface FontAsset {
+  id: FontId;
+  /** Name declared in the SVG @font-face and referenced by every text node. */
+  family: string;
+  file: string;
+  format: FontFormat;
+  digestSha256: string;
+  licenceFile: string;
+}
+
+export const FONTS = {
+  "shantell-sans-semibold": {
+    id: "shantell-sans-semibold",
+    family: "Shantell Sans SemiBold",
+    file: "assets/fonts/ShantellSans-SemiBold.otf",
+    format: "opentype",
+    digestSha256: "e3e56024242b3ba40da25854a8fe9080e9bde0ea20fddd0c807e2e246d659097",
+    licenceFile: "assets/fonts/OFL-Shantell-Sans.txt",
+  },
+  "noto-sans-regular": {
+    id: "noto-sans-regular",
+    family: "Noto Sans",
+    file: "assets/fonts/NotoSans-Regular.otf",
+    format: "opentype",
+    digestSha256: "bfb44de2c2031c391ff856943fe8f105ebb5d725cb9a04d493d211d5bbd5c21b",
+    licenceFile: "assets/fonts/OFL.txt",
+  },
+  "jetbrains-mono-regular": {
+    id: "jetbrains-mono-regular",
+    family: "JetBrains Mono",
+    file: "assets/fonts/JetBrainsMono-Regular.ttf",
+    format: "truetype",
+    digestSha256: "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1",
+    licenceFile: "assets/fonts/OFL-JetBrains-Mono.txt",
+  },
+  "ibm-plex-mono-regular": {
+    id: "ibm-plex-mono-regular",
+    family: "IBM Plex Mono",
+    file: "assets/fonts/IBMPlexMono-Regular.ttf",
+    format: "truetype",
+    digestSha256: "7c6fbddca4b700be918f5f6183d9bd4464fa427fe435f0b480d77fe2bb8c5a43",
+    licenceFile: "assets/fonts/OFL-IBM-Plex-Mono.txt",
+  },
+  "roboto-mono-regular": {
+    id: "roboto-mono-regular",
+    family: "Roboto Mono",
+    file: "assets/fonts/RobotoMono-Regular.ttf",
+    format: "truetype",
+    digestSha256: "af0bff7599c3df3831755c16e39b3c496df74b8c8d8a1161b14dc8461be17cb4",
+    licenceFile: "assets/fonts/OFL-Roboto-Mono.txt",
+  },
+  "oswald-medium": {
+    id: "oswald-medium",
+    family: "Oswald Medium",
+    file: "assets/fonts/Oswald-Medium.ttf",
+    format: "truetype",
+    digestSha256: "d8b3ac8668c6ddbcecd299567e2130e2b933ad8b6c98b5b8ac6ff2bee9c0848a",
+    licenceFile: "assets/fonts/OFL-Oswald.txt",
+  },
+} satisfies Record<FontId, FontAsset>;
+
+export interface TypographyRole {
+  fontId: FontId;
+  /** Render upper-case. Measurement runs on the transformed string. */
+  uppercase: boolean;
+}
+
 export interface TypographyProfile {
-  role: string;
-  fontFamily: string;
-  fontFile: string;
-  fontDigestSha256: string;
+  roles: Record<FontRole, TypographyRole>;
   sourceLabelScale: number;
   sourceLabelMinFontSize: number;
   sourceLabelMaxFontSize: number;
   sourceLabelGapFactor: number;
 }
+
+/** Every face Wubble may load, pinned by digest. */
+export const FONT_IDS: readonly FontId[] = [
+  "shantell-sans-semibold",
+  "noto-sans-regular",
+  "jetbrains-mono-regular",
+  "ibm-plex-mono-regular",
+  "roboto-mono-regular",
+  "oswald-medium",
+];
 
 export interface RenderProfile {
   id: string;
@@ -185,10 +263,12 @@ export const PROFILE = {
     }),
   },
   typography: {
-    role: "body",
-    fontFamily: "Noto Sans",
-    fontFile: "assets/fonts/NotoSans-Regular.otf",
-    fontDigestSha256: "bfb44de2c2031c391ff856943fe8f105ebb5d725cb9a04d493d211d5bbd5c21b",
+    roles: {
+      human: { fontId: "shantell-sans-semibold", uppercase: false },
+      // Provisional until the machine voice is selected by name.
+      machine: { fontId: "ibm-plex-mono-regular", uppercase: false },
+      machineLabel: { fontId: "ibm-plex-mono-regular", uppercase: true },
+    },
     sourceLabelScale: 0.36,
     sourceLabelMinFontSize: 14,
     sourceLabelMaxFontSize: 24,
@@ -199,30 +279,84 @@ export const PROFILE = {
 
 const SHAPE_IDS = new Set<string>(Object.keys(PROFILE.shapes));
 
-let cachedFontBytes: Buffer | null = null;
-let cachedFontBase64: string | null = null;
+const fontBytesCache = new Map<FontId, Buffer>();
+const fontBase64Cache = new Map<FontId, string>();
 
-export function fontAbsolutePath(): string {
-  return join(ROOT, PROFILE.typography.fontFile);
+export function isFontId(value: string): value is FontId {
+  return Object.prototype.hasOwnProperty.call(FONTS, value);
 }
 
-export function loadFontBytes(): Buffer {
-  if (cachedFontBytes) return cachedFontBytes;
-  const bytes = readFileSync(fontAbsolutePath());
+export function fontAsset(id: FontId): FontAsset {
+  return FONTS[id];
+}
+
+export function fontAbsolutePath(id: FontId): string {
+  return join(ROOT, fontAsset(id).file);
+}
+
+/** Load a registered face, refusing any bytes that do not match its digest. */
+export function loadFontBytes(id: FontId): Buffer {
+  const cached = fontBytesCache.get(id);
+  if (cached) return cached;
+  const asset = fontAsset(id);
+  const bytes = readFileSync(join(ROOT, asset.file));
   const digest = createHash("sha256").update(bytes).digest("hex");
-  if (digest !== PROFILE.typography.fontDigestSha256) {
+  if (digest !== asset.digestSha256) {
     throw new Error(
-      `Font digest mismatch: expected ${PROFILE.typography.fontDigestSha256}, got ${digest}`,
+      `Font digest mismatch for ${id}: expected ${asset.digestSha256}, got ${digest}`,
     );
   }
-  cachedFontBytes = bytes;
+  fontBytesCache.set(id, bytes);
   return bytes;
 }
 
-export function fontBase64(): string {
-  if (cachedFontBase64) return cachedFontBase64;
-  cachedFontBase64 = loadFontBytes().toString("base64");
-  return cachedFontBase64;
+export function fontBase64(id: FontId): string {
+  const cached = fontBase64Cache.get(id);
+  if (cached) return cached;
+  const b64 = loadFontBytes(id).toString("base64");
+  fontBase64Cache.set(id, b64);
+  return b64;
+}
+
+/** Mime type used inside the embedded data URL. */
+export function fontMime(id: FontId): string {
+  return fontAsset(id).format === "opentype" ? "font/otf" : "font/ttf";
+}
+
+export function defaultFontBinding(): FontBinding {
+  const roles = PROFILE.typography.roles;
+  return {
+    human: roles.human.fontId,
+    machine: roles.machine.fontId,
+    machineLabel: roles.machineLabel.fontId,
+  };
+}
+
+/**
+ * Resolve one render's faces. Overriding `machine` moves the source label with
+ * it unless the label is overridden separately, so a candidate is one decision.
+ */
+export function resolveFontBinding(overrides?: Partial<FontBinding>): FontBinding {
+  const base = defaultFontBinding();
+  if (!overrides) return base;
+  return {
+    human: overrides.human ?? base.human,
+    machine: overrides.machine ?? base.machine,
+    machineLabel: overrides.machineLabel ?? overrides.machine ?? base.machineLabel,
+  };
+}
+
+export function voiceOf(item: { voice?: Voice }): Voice {
+  return item.voice ?? "human";
+}
+
+/** Dialogue face for a voice. Narration is set in the human hand. */
+export function textFontIdFor(binding: FontBinding, voice: Voice): FontId {
+  return voice === "machine" ? binding.machine : binding.human;
+}
+
+export function labelFontIdFor(binding: FontBinding): FontId {
+  return binding.machineLabel;
 }
 
 export function shapeProfile(shapeId: ShapeId): ShapeProfile {

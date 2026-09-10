@@ -1,10 +1,24 @@
 import { validateSchema } from "./schema";
 import { resolveAnchor, resolveBend, resolvePlacement, validatePage } from "./validate";
-import { fitBalloonText, fitStyleOf, resolveLetteringPads } from "./layout";
+import {
+  fitBalloonText,
+  fitStyleOf,
+  letterFontsFor,
+  resolveLetteringPads,
+  type LetterFonts,
+} from "./layout";
 import { buildShape } from "./shapes/index";
 import { isRefShapeId, refLobeContentBand, contentBandBox } from "./shapes/ref-sheet";
-import { fontBase64, isShapeImplemented, PROFILE } from "./profile";
-import { fmt } from "./normalize";
+import {
+  fontAsset,
+  fontBase64,
+  fontMime,
+  isShapeImplemented,
+  resolveFontBinding,
+  voiceOf,
+  type FontId,
+} from "./profile";
+import { fmt, roundN } from "./normalize";
 import { fontVerticalMetrics } from "./font";
 import { hasErrors } from "./diagnostics";
 import type {
@@ -24,11 +38,47 @@ function escapeXml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Source-tag brackets, drawn as geometry rather than typed.
+ * The canon tag is written ⟦LIKE THIS⟧ and almost no text face carries U+27E6,
+ * so the marks are constructed and the font choice stays free.
+ */
+function sourceTagBrackets(
+  midX: number,
+  baseline: number,
+  labelWidth: number,
+  fontSize: number,
+): string {
+  const h = fontSize * 0.74;
+  const bw = fontSize * 0.3;
+  const gap = fontSize * 0.34;
+  const inner = bw * 0.52;
+  const top = baseline - h;
+  const leftOuter = midX - labelWidth / 2 - gap - bw;
+  const rightOuter = midX + labelWidth / 2 + gap + bw;
+  const d = [
+    `M ${fmt(leftOuter + bw)} ${fmt(top)}`,
+    `L ${fmt(leftOuter)} ${fmt(top)}`,
+    `L ${fmt(leftOuter)} ${fmt(baseline)}`,
+    `L ${fmt(leftOuter + bw)} ${fmt(baseline)}`,
+    `M ${fmt(leftOuter + inner)} ${fmt(top)}`,
+    `L ${fmt(leftOuter + inner)} ${fmt(baseline)}`,
+    `M ${fmt(rightOuter - bw)} ${fmt(top)}`,
+    `L ${fmt(rightOuter)} ${fmt(top)}`,
+    `L ${fmt(rightOuter)} ${fmt(baseline)}`,
+    `L ${fmt(rightOuter - bw)} ${fmt(baseline)}`,
+    `M ${fmt(rightOuter - inner)} ${fmt(top)}`,
+    `L ${fmt(rightOuter - inner)} ${fmt(baseline)}`,
+  ].join(" ");
+  return `      <path data-part="source-tag-brackets" d="${d}" fill="none" stroke="currentColor" stroke-width="${fmt(roundN(fontSize * 0.09))}" stroke-linecap="square"/>`;
+}
+
 function textNodesFor(
   fitted: FittedText,
   body: Bounds,
   shapeId: BalloonItem["shapeId"],
   fill: string,
+  fonts: LetterFonts,
   style?: import("./layout").FitStyle,
 ): string {
   const box = fitted.textBounds ?? body;
@@ -43,26 +93,29 @@ function textNodesFor(
   let dialogueTop = blockTop;
   if (fitted.sourceLabel) {
     const label = fitted.sourceLabel;
-    const labelBaseline = fontVerticalMetrics(label.fontSize).baselineOffset;
+    const labelBaseline = fontVerticalMetrics(label.fontSize, fonts.label).baselineOffset;
+    const baseline = blockTop + labelBaseline;
     nodes.push(
-      `      <text data-part="source-label" x="${fmt(midX)}" y="${fmt(blockTop + labelBaseline)}" text-anchor="middle" font-family="${escapeXml(PROFILE.typography.fontFamily)}" font-size="${fmt(label.fontSize)}">${escapeXml(label.text)}</text>`,
+      sourceTagBrackets(midX, baseline, label.contentWidth, label.fontSize),
+      `      <text data-part="source-label" x="${fmt(midX)}" y="${fmt(baseline)}" text-anchor="middle" font-family="${escapeXml(fontAsset(fonts.label).family)}" font-size="${fmt(label.fontSize)}">${escapeXml(label.text)}</text>`,
     );
     dialogueTop += label.lineHeight + label.gapAfter;
   }
   const lines = fitted.lines
     .map((line, i) => {
-      const y = dialogueTop + i * lh + fontVerticalMetrics(fs).baselineOffset;
-      return `      <text x="${fmt(midX)}" y="${fmt(y)}" text-anchor="middle" font-family="${escapeXml(PROFILE.typography.fontFamily)}" font-size="${fmt(fs)}">${escapeXml(line)}</text>`;
+      const y = dialogueTop + i * lh + fontVerticalMetrics(fs, fonts.text).baselineOffset;
+      return `      <text x="${fmt(midX)}" y="${fmt(y)}" text-anchor="middle" font-family="${escapeXml(fontAsset(fonts.text).family)}" font-size="${fmt(fs)}">${escapeXml(line)}</text>`;
     })
     .join("\n");
   nodes.push(lines);
-  return `    <g data-part="text" fill="${fill}">\n${nodes.join("\n")}\n    </g>`;
+  return `    <g data-part="text" fill="${fill}" color="${fill}">\n${nodes.join("\n")}\n    </g>`;
 }
 
 function renderBalloonGroup(
   manifest: PageManifest,
   item: BalloonItem,
   locale: string,
+  fonts: LetterFonts,
 ): string | null {
   if (!isShapeImplemented(item.shapeId)) return null;
   const content = item.content[locale];
@@ -70,7 +123,7 @@ function renderBalloonGroup(
 
   const placement = resolvePlacement(item, locale);
   const fitStyle = fitStyleOf(item);
-  const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle);
+  const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle, fonts);
   if (!layout.fitted) return null;
 
   const body = layout.fitted.bodyBounds;
@@ -97,6 +150,7 @@ function renderBalloonGroup(
         `${item.id}#lobe${i}`,
         item.shapeId,
         fitStyle,
+        fonts,
       );
       if (!lf.fitted) continue;
       // Keep lettering inside the derived box; do not let lobe expand rewrite geometry.
@@ -129,30 +183,57 @@ function renderBalloonGroup(
   });
 
   const parts: string[] = [];
-  parts.push(`  <g id="${escapeXml(item.id)}" data-shape="${item.shapeId}">`);
+  parts.push(
+    `  <g id="${escapeXml(item.id)}" data-shape="${item.shapeId}" data-voice="${voiceOf(item)}">`,
+  );
   parts.push(
     `    <path data-part="balloon" d="${geom.path}" fill="${geom.fill}" stroke="${geom.stroke}" stroke-width="${fmt(geom.strokeWidth)}" stroke-linejoin="round" stroke-linecap="round"/>`,
   );
-  parts.push(textNodesFor(layout.fitted, body, item.shapeId, geom.stroke, fitStyle));
+  parts.push(textNodesFor(layout.fitted, body, item.shapeId, geom.stroke, fonts, fitStyle));
   for (const lobe of lobeFits) {
-    parts.push(textNodesFor(lobe.fitted, lobe.body, item.shapeId, geom.stroke, fitStyle));
+    parts.push(textNodesFor(lobe.fitted, lobe.body, item.shapeId, geom.stroke, fonts, fitStyle));
   }
   parts.push(`  </g>`);
   return parts.join("\n");
 }
 
-function serializeSvg(manifest: PageManifest, locale: string): string {
+function fontFaceRule(id: FontId): string[] {
+  const asset = fontAsset(id);
+  const format = asset.format === "opentype" ? "opentype" : "truetype";
+  return [
+    `      @font-face {`,
+    `        font-family: "${escapeXml(asset.family)}";`,
+    `        font-style: normal;`,
+    `        font-weight: 400;`,
+    `        src: url("data:${fontMime(id)};base64,${fontBase64(id)}") format("${format}");`,
+    `      }`,
+  ];
+}
+
+function serializeSvg(manifest: PageManifest, locale: string, options: RenderOptions): string {
   const w = manifest.coordinateSpace.width;
   const h = manifest.coordinateSpace.height;
-  const b64 = fontBase64();
+  const binding = resolveFontBinding(options.fonts);
 
   const groups: string[] = [];
+  const usedFonts: FontId[] = [];
+  const useFont = (id: FontId): void => {
+    if (!usedFonts.includes(id)) usedFonts.push(id);
+  };
   for (const item of manifest.items) {
     if (item.kind !== "balloon") continue;
-    if (!item.content[locale]) continue;
+    const content = item.content[locale];
+    if (!content) continue;
     if (!isShapeImplemented(item.shapeId)) continue;
-    const g = renderBalloonGroup(manifest, item, locale);
-    if (g) groups.push(g);
+    const fonts = letterFontsFor(voiceOf(item), binding);
+    const g = renderBalloonGroup(manifest, item, locale, fonts);
+    if (!g) continue;
+    groups.push(g);
+    useFont(fonts.text);
+    if (content.sourceLabel !== undefined) useFont(fonts.label);
+    for (const lobe of item.lobes ?? []) {
+      if (lobe.content[locale]) useFont(fonts.text);
+    }
   }
 
   const lines = [
@@ -160,12 +241,7 @@ function serializeSvg(manifest: PageManifest, locale: string): string {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">`,
     `  <defs>`,
     `    <style type="text/css">`,
-    `      @font-face {`,
-    `        font-family: "${escapeXml(PROFILE.typography.fontFamily)}";`,
-    `        font-style: normal;`,
-    `        font-weight: 400;`,
-    `        src: url("data:font/otf;base64,${b64}") format("opentype");`,
-    `      }`,
+    ...usedFonts.flatMap(fontFaceRule),
     `    </style>`,
     `  </defs>`,
     ...groups,
@@ -186,7 +262,7 @@ export function renderPage(manifestInput: unknown, options: RenderOptions): Rend
     return { svg: null, diagnostics: report };
   }
 
-  const svg = serializeSvg(schema.manifest, options.locale);
+  const svg = serializeSvg(schema.manifest, options.locale, options);
   return { svg, diagnostics: report };
 }
 

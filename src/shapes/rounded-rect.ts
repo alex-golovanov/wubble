@@ -2,7 +2,7 @@
  * Universal rounded-rect / pill balloon silhouette.
  *
  * cornerRadius: 0..1 × min(w,h)/2  (0 = sharp rect, 1 = full stadium/pill)
- * edge: smooth | jagged
+ * edge: smooth | jagged | hand
  *
  * Single closed path with OPEN tail join (no crossbar cutting the tip).
  * Optional chained lobes fuse via open necks into one silhouette.
@@ -12,7 +12,7 @@ import { fmt, roundN } from "../normalize";
 import type { Bounds, Point } from "../types";
 import { at } from "../util";
 
-export type EdgeStyle = "smooth" | "jagged";
+export type EdgeStyle = "smooth" | "jagged" | "hand";
 export type Attachment = "top" | "right" | "bottom" | "left" | "auto";
 type Side = "top" | "right" | "bottom" | "left";
 
@@ -58,8 +58,18 @@ function radiusPx(body: Bounds, cornerRadius: number, edge: EdgeStyle): number {
   return Math.min(r, body.width / 2, body.height / 2);
 }
 
-function tailHalfWidth(body: Bounds): number {
-  return Math.max(10, Math.min(body.width, body.height) * 0.11);
+/**
+ * Tail base, scaled to how far the tail has to travel. A long tail drawn on a
+ * narrow base reads as a needle; comic tails widen as they reach.
+ */
+function tailHalfWidth(body: Bounds, tip: Point): number {
+  const cx = body.x + body.width / 2;
+  const cy = body.y + body.height / 2;
+  const reach = Math.hypot(tip.x - cx, tip.y - cy);
+  const minD = Math.min(body.width, body.height);
+  const floor = minD * 0.1;
+  const ceiling = Math.min(minD * 0.34, body.width * 0.3);
+  return Math.max(10, Math.min(ceiling, Math.max(floor, reach * 0.2)));
 }
 
 /** Join points on attachment edge. `first`/`second` are in clockwise outline order. */
@@ -68,7 +78,7 @@ function joinClockwise(
   side: Side,
   tip: Point,
 ): { first: Point; second: Point; mid: Point } {
-  const hw = tailHalfWidth(body);
+  const hw = tailHalfWidth(body, tip);
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   switch (side) {
@@ -206,6 +216,47 @@ function pushTail(
   else pushSmoothTail(cmds, enter, tip, exit, bend);
 }
 
+/**
+ * Deterministic 0..1 from a point pair. The wobble is a function of the
+ * geometry itself, so the same balloon always draws the same outline and
+ * repeated renders stay byte-identical.
+ */
+function wobbleSeed(a: number, b: number, salt: number): number {
+  let h = Math.imul(Math.round(a * 8) ^ 0x9e3779b9, 0x85ebca6b);
+  h = Math.imul(h ^ Math.round(b * 8) ^ 0x27d4eb2f, 0xc2b2ae35);
+  h = Math.imul(h ^ salt, 0x165667b1);
+  h ^= h >>> 15;
+  return ((h >>> 0) % 65536) / 65536;
+}
+
+/**
+ * A drawn-looking run between two points: a few quadratic segments whose
+ * control points drift off the straight line by a fraction of the body.
+ */
+function handRun(cmds: Cmd[], from: Point, to: Point, body: Bounds): void {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const amp = Math.min(len * 0.045, Math.min(body.width, body.height) * 0.022);
+  const steps = Math.max(2, Math.min(4, Math.round(len / 160)));
+  for (let i = 1; i <= steps; i++) {
+    const t0 = (i - 1) / steps;
+    const t1 = i / steps;
+    const tm = (t0 + t1) / 2;
+    const swing = wobbleSeed(from.x + dx * t0, from.y + dy * t0, i) - 0.5;
+    const bulge = amp * swing * 2;
+    const p: Point = { x: from.x + dx * t1, y: from.y + dy * t1 };
+    const c: Point = {
+      x: from.x + dx * tm + nx * bulge,
+      y: from.y + dy * tm + ny * bulge,
+    };
+    cmds.push({ t: "Q", c, p });
+  }
+}
+
 function jagPoints(from: Point, to: Point, amp: number, steps: number): Point[] {
   const out: Point[] = [];
   const dx = to.x - from.x;
@@ -228,6 +279,13 @@ function edgeTo(cmds: Cmd[], from: Point, to: Point, edge: EdgeStyle, body: Boun
   if (edge === "jagged") {
     const amp = Math.min(body.width, body.height) * 0.045;
     for (const p of jagPoints(from, to, amp, 5)) cmds.push({ t: "L", p });
+    cmds.push({ t: "L", p: to });
+    return;
+  }
+  if (edge === "hand") {
+    handRun(cmds, from, to, body);
+    cmds.push({ t: "L", p: to });
+    return;
   }
   cmds.push({ t: "L", p: to });
 }

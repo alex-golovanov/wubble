@@ -1,7 +1,7 @@
 import { diag, makeReport } from "./diagnostics";
 import { validateSchema } from "./schema";
-import { fitBalloonText, fitStyleOf } from "./layout";
-import { isShapeImplemented, PROFILE, PROFILE_ID } from "./profile";
+import { fitBalloonText, fitStyleOf, letterFontsFor } from "./layout";
+import { isShapeImplemented, PROFILE, PROFILE_ID, resolveFontBinding, voiceOf } from "./profile";
 import { boundsInside, rectsOverlap, segmentCrossesBounds } from "./collisions";
 import type {
   BalloonItem,
@@ -79,6 +79,7 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
   }
 
   const locale = options.locale;
+  const binding = resolveFontBinding(options.fonts);
   const space = manifest.coordinateSpace;
   const bodyBoundsByItem = new Map<string, Bounds>();
   const tipsByItem = new Map<string, Point>();
@@ -109,9 +110,38 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
       continue;
     }
 
+    // Canon rules, enforced rather than trusted to the letterer.
+    const voice = voiceOf(item);
+    if (voice === "machine") {
+      if (item.tail) {
+        diagnostics.push(
+          diag("VOICE_RULE", "A machine playback balloon never carries a tail.", {
+            itemId: item.id,
+          }),
+        );
+      }
+      if (content.sourceLabel === undefined) {
+        diagnostics.push(
+          diag("VOICE_RULE", "A machine playback balloon must name its recording source.", {
+            itemId: item.id,
+          }),
+        );
+      }
+    } else if (content.sourceLabel !== undefined) {
+      diagnostics.push(
+        diag("VOICE_RULE", `A ${voice} balloon cannot carry a recording source label.`, {
+          itemId: item.id,
+        }),
+      );
+    }
+    if (voice === "narration" && item.tail) {
+      diagnostics.push(diag("VOICE_RULE", "A caption never carries a tail.", { itemId: item.id }));
+    }
+
+    const fonts = letterFontsFor(voice, binding);
     const placement = resolvePlacement(item, locale);
     const fitStyle = fitStyleOf(item);
-    const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle);
+    const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle, fonts);
     diagnostics.push(...layout.diagnostics);
     if (!layout.fitted) continue;
 
@@ -146,6 +176,7 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
           `${item.id}#lobe${li}`,
           item.shapeId,
           fitStyle,
+          fonts,
         );
         diagnostics.push(...lobeLayout.diagnostics);
         if (!lobeLayout.fitted) continue;

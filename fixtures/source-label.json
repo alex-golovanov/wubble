@@ -1,13 +1,31 @@
 {
   "schemaVersion": "0.1.0",
   "pageId": "source-label",
-  "coordinateSpace": { "width": 900, "height": 600, "origin": "top-left", "units": "art-px" },
-  "renderProfile": { "id": "rift-city-proof", "version": "0.1.0" },
+  "coordinateSpace": {
+    "width": 900,
+    "height": 600,
+    "origin": "top-left",
+    "units": "art-px"
+  },
+  "renderProfile": {
+    "id": "rift-city-proof",
+    "version": "0.1.0"
+  },
   "subjects": [
     {
       "id": "glitch",
-      "bounds": { "x": 650, "y": 400, "width": 120, "height": 120 },
-      "anchors": { "playback": { "x": 700, "y": 440 } }
+      "bounds": {
+        "x": 650,
+        "y": 400,
+        "width": 120,
+        "height": 120
+      },
+      "anchors": {
+        "playback": {
+          "x": 700,
+          "y": 440
+        }
+      }
     }
   ],
   "exclusionZones": [],
@@ -18,10 +36,19 @@
       "panelId": "P022-02",
       "speakerId": "glitch",
       "shapeId": "speech",
+      "voice": "machine",
       "cornerRadius": 0,
-      "placement": { "x": 100, "y": 100, "width": 560, "height": 260 },
+      "placement": {
+        "x": 100,
+        "y": 100,
+        "width": 560,
+        "height": 260
+      },
       "content": {
-        "en": { "sourceLabel": "TRANSIT ANNOUNCEMENT", "text": "—doors held. Please stand clear—" }
+        "en": {
+          "sourceLabel": "TRANSIT ANNOUNCEMENT",
+          "text": "—doors held. Please stand clear—"
+        }
       }
     }
   ]

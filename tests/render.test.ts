@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderPage } from "../src/index";
-import { PROFILE, PROFILE_ID } from "../src/profile";
+import { PROFILE, PROFILE_ID, fontAsset } from "../src/profile";
 import { MANIFEST_SVG_FORBIDDEN } from "../src/render";
 import { requireSvg } from "./helpers";
 
@@ -51,12 +51,12 @@ describe("renderPage", () => {
     const m = load("examples/page-022.json");
     const enSvg = requireSvg(renderPage(m, { locale: "en", profileId: PROFILE_ID }));
     expect(enSvg).toContain("@font-face");
-    expect(enSvg).toContain("data:font/otf;base64,");
-    expect(enSvg).toContain('font-family: "Noto Sans"');
+    expect(enSvg).toContain("base64,");
+    expect(enSvg).toContain('font-family: "Shantell Sans SemiBold"');
     expect(enSvg).not.toContain("/System/Library");
     expect(enSvg).not.toContain("fonts.googleapis");
-    // digest recorded in profile
-    expect(PROFILE.typography.fontDigestSha256).toHaveLength(64);
+    // digest recorded in the registry for the bound human face
+    expect(fontAsset(PROFILE.typography.roles.human.fontId).digestSha256).toHaveLength(64);
   });
 
   test("source label is measured and rendered smaller than dialogue", () => {

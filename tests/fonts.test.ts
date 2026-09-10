@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { create } from "fontkit";
-import { fontVerticalMetrics } from "../src/font";
+import { fontVerticalMetrics, measureWidth, missingGlyphs } from "../src/font";
+import { FONT_IDS, fontAsset, loadFontBytes } from "../src/profile";
 
 const fonts: ReadonlyArray<{ name: string; file: string; digest: string }> = [
   {
@@ -34,11 +35,23 @@ describe("bundled font assets", () => {
     });
   }
 
-  test("configured font is vertically centred inside its line box", () => {
-    const metrics = fontVerticalMetrics(72);
-    const clearanceAbove = metrics.baselineOffset - metrics.ascent;
-    const clearanceBelow = metrics.lineHeight - metrics.baselineOffset - metrics.descent;
-    expect(Math.abs(clearanceAbove - clearanceBelow)).toBeLessThanOrEqual(0.02);
-    expect(clearanceAbove).toBeGreaterThan(0);
+  test("every registered face is vertically centred inside its line box", () => {
+    for (const id of FONT_IDS) {
+      const metrics = fontVerticalMetrics(72, id);
+      const clearanceAbove = metrics.baselineOffset - metrics.ascent;
+      const clearanceBelow = metrics.lineHeight - metrics.baselineOffset - metrics.descent;
+      expect(Math.abs(clearanceAbove - clearanceBelow)).toBeLessThanOrEqual(0.02);
+      expect(clearanceAbove).toBeGreaterThan(0);
+    }
+  });
+
+  test("every registered face loads, matches its digest and covers both scripts", () => {
+    for (const id of FONT_IDS) {
+      const asset = fontAsset(id);
+      const bytes = loadFontBytes(id);
+      expect(createHash("sha256").update(bytes).digest("hex")).toBe(asset.digestSha256);
+      expect(missingGlyphs("Wait. Подождите. —?!", id)).toEqual([]);
+      expect(measureWidth("Wait.", 48, id)).toBeGreaterThan(0);
+    }
   });
 });

@@ -1,6 +1,14 @@
 import { missingGlyphs, measureWidth, wrapText, lineHeightPx } from "./font";
 import { roundN } from "./normalize";
-import { PROFILE, shapeProfile } from "./profile";
+import {
+  defaultFontBinding,
+  labelFontIdFor,
+  PROFILE,
+  shapeProfile,
+  textFontIdFor,
+  type FontBinding,
+  type FontId,
+} from "./profile";
 import {
   isRefShapeId,
   refContentBand,
@@ -13,12 +21,48 @@ import {
   defaultCornerRadius,
   defaultEdge,
 } from "./shapes/rounded-rect";
-import type { Bounds, Diagnostic, EdgeStyle, FittedText, LocaleContent, ShapeId } from "./types";
+import type {
+  Bounds,
+  Diagnostic,
+  EdgeStyle,
+  FittedText,
+  LocaleContent,
+  ShapeId,
+  Voice,
+} from "./types";
 import { diag } from "./diagnostics";
 
 export interface LayoutResult {
   fitted: FittedText | null;
   diagnostics: Diagnostic[];
+}
+
+/** The two faces one balloon letters with, plus the label casing rule. */
+export interface LetterFonts {
+  text: FontId;
+  label: FontId;
+  labelUppercase: boolean;
+}
+
+export function letterFontsFor(voice: Voice, binding: FontBinding): LetterFonts {
+  return {
+    text: textFontIdFor(binding, voice),
+    label: labelFontIdFor(binding),
+    labelUppercase: PROFILE.typography.roles.machineLabel.uppercase,
+  };
+}
+
+export function defaultLetterFonts(): LetterFonts {
+  return letterFontsFor("human", defaultFontBinding());
+}
+
+/** Source label exactly as it will be measured and drawn. */
+export function resolveLabelText(
+  sourceLabel: string | undefined,
+  fonts: LetterFonts,
+): string | undefined {
+  if (sourceLabel === undefined) return undefined;
+  return fonts.labelUppercase ? sourceLabel.toUpperCase() : sourceLabel;
 }
 
 function contentString(content: LocaleContent): string {
@@ -33,8 +77,11 @@ function measureContent(
   fontSize: number,
   lineHeight: number,
   sourceLabel: string | undefined,
+  fonts: LetterFonts,
 ): TextMetrics {
-  const dialogueWidth = roundN(Math.max(...lines.map((line) => measureWidth(line, fontSize)), 0));
+  const dialogueWidth = roundN(
+    Math.max(...lines.map((line) => measureWidth(line, fontSize, fonts.text)), 0),
+  );
   const dialogueHeight = roundN(lines.length * lineHeight);
   if (!sourceLabel) {
     return { contentWidth: dialogueWidth, contentHeight: dialogueHeight };
@@ -47,8 +94,8 @@ function measureContent(
       Math.max(typography.sourceLabelMinFontSize, fontSize * typography.sourceLabelScale),
     ),
   );
-  const labelLineHeight = lineHeightPx(labelFontSize);
-  const labelWidth = measureWidth(sourceLabel, labelFontSize);
+  const labelLineHeight = lineHeightPx(labelFontSize, fonts.label);
+  const labelWidth = measureWidth(sourceLabel, labelFontSize, fonts.label);
   const gapAfter = roundN(labelFontSize * typography.sourceLabelGapFactor);
   return {
     contentWidth: roundN(Math.max(dialogueWidth, labelWidth)),
@@ -86,12 +133,31 @@ export interface FitStyle {
   edge?: EdgeStyle;
 }
 
-/** Optional knobs only — omits keys when undefined (`exactOptionalPropertyTypes`). */
-export function fitStyleOf(item: { cornerRadius?: number; edge?: EdgeStyle }): FitStyle {
-  const style: FitStyle = {};
-  if (item.cornerRadius !== undefined) style.cornerRadius = item.cornerRadius;
-  if (item.edge !== undefined) style.edge = item.edge;
-  return style;
+/**
+ * Silhouette defaults come from the voice, so a manifest states who is talking
+ * and gets the right balloon. Explicit knobs still win.
+ *
+ * human     — nearly-round body, hand-drawn outline.
+ * machine   — hard square box; a played-back clip, not a voice. The torn
+ *              outline is reserved for a clip that is failing.
+ * narration — a plain caption box.
+ */
+export function voiceStyle(voice: Voice): { cornerRadius: number; edge: EdgeStyle } {
+  if (voice === "machine") return { cornerRadius: 0, edge: "smooth" };
+  if (voice === "narration") return { cornerRadius: 0.06, edge: "smooth" };
+  return { cornerRadius: 0.9, edge: "hand" };
+}
+
+export function fitStyleOf(item: {
+  cornerRadius?: number;
+  edge?: EdgeStyle;
+  voice?: Voice;
+}): FitStyle {
+  const base = voiceStyle(item.voice ?? "human");
+  return {
+    cornerRadius: item.cornerRadius ?? base.cornerRadius,
+    edge: item.edge ?? base.edge,
+  };
 }
 
 function resolveFitStyle(
@@ -174,13 +240,17 @@ export function fitBalloonText(
   itemId: string,
   shapeId: ShapeId = "speech",
   style?: FitStyle,
+  fonts: LetterFonts = defaultLetterFonts(),
 ): LayoutResult {
   const shape = shapeProfile(shapeId);
   const diagnostics: Diagnostic[] = [];
   const raw = contentString(content);
+  const labelText = resolveLabelText(content.sourceLabel, fonts);
 
-  const glyphInput = `${content.sourceLabel ?? ""}${raw.replace(/\n/g, "")}`;
-  const missing = missingGlyphs(glyphInput);
+  const missing = [
+    ...missingGlyphs(raw.replace(/\n/g, ""), fonts.text),
+    ...(labelText === undefined ? [] : missingGlyphs(labelText, fonts.label)),
+  ];
   if (missing.length > 0) {
     diagnostics.push(
       diag("GLYPH_MISSING", `Missing glyphs: ${missing.map((c) => JSON.stringify(c)).join(", ")}`, {
@@ -221,13 +291,13 @@ export function fitBalloonText(
       if (authoredLines) {
         lines = authoredLines;
       } else {
-        lines = wrapText(raw, fontSize, probeMaxW);
+        lines = wrapText(raw, fontSize, probeMaxW, fonts.text);
       }
       if (!lines) continue;
       if (lines.length > shape.maxLines) continue;
 
-      const lh = lineHeightPx(fontSize);
-      const metrics = measureContent(lines, fontSize, lh, content.sourceLabel);
+      const lh = lineHeightPx(fontSize, fonts.text);
+      const metrics = measureContent(lines, fontSize, lh, labelText, fonts);
       const { contentWidth, contentHeight } = metrics;
 
       const e = minExpandForBand(
@@ -257,7 +327,7 @@ export function fitBalloonText(
       if (authoredLines) {
         let ok = true;
         for (const line of authoredLines) {
-          if (measureWidth(line, fontSize) > maxTextW + 0.5) {
+          if (measureWidth(line, fontSize, fonts.text) > maxTextW + 0.5) {
             ok = false;
             break;
           }
@@ -293,17 +363,17 @@ export function fitBalloonText(
         if (authoredLines) {
           lines = authoredLines;
           for (const line of lines) {
-            if (measureWidth(line, fontSize) > maxTextW) {
+            if (measureWidth(line, fontSize, fonts.text) > maxTextW) {
               lines = null;
               break;
             }
           }
         } else {
-          lines = wrapText(raw, fontSize, maxTextW);
+          lines = wrapText(raw, fontSize, maxTextW, fonts.text);
         }
         if (lines && lines.length <= shape.maxLines) {
-          const lh = lineHeightPx(fontSize);
-          const metrics = measureContent(lines, fontSize, lh, content.sourceLabel);
+          const lh = lineHeightPx(fontSize, fonts.text);
+          const metrics = measureContent(lines, fontSize, lh, labelText, fonts);
           const { contentWidth, contentHeight } = metrics;
           if (contentHeight <= maxTextH) {
             return {
@@ -356,19 +426,19 @@ export function fitBalloonText(
       if (authoredLines) {
         lines = authoredLines;
         for (const line of lines) {
-          if (measureWidth(line, fontSize) > maxTextW) {
+          if (measureWidth(line, fontSize, fonts.text) > maxTextW) {
             lines = null;
             break;
           }
         }
       } else {
-        lines = wrapText(raw, fontSize, maxTextW);
+        lines = wrapText(raw, fontSize, maxTextW, fonts.text);
       }
       if (!lines) continue;
       if (lines.length > shape.maxLines) continue;
 
-      const lh = lineHeightPx(fontSize);
-      const metrics = measureContent(lines, fontSize, lh, content.sourceLabel);
+      const lh = lineHeightPx(fontSize, fonts.text);
+      const metrics = measureContent(lines, fontSize, lh, labelText, fonts);
       const { contentWidth, contentHeight } = metrics;
       if (contentHeight > maxTextH) continue;
 

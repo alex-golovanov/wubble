@@ -1,29 +1,27 @@
 import { create } from "fontkit";
 import type { Font, FontCollection } from "fontkit";
-import { loadFontBytes, PROFILE } from "./profile";
+import { loadFontBytes, PROFILE, type FontId } from "./profile";
 import { roundN } from "./normalize";
 
-let cachedFont: Font | null = null;
+const fontCache = new Map<FontId, Font>();
 
 function isFont(value: Font | FontCollection): value is Font {
   return "layout" in value;
 }
 
-export function getFont(): Font {
-  if (cachedFont) return cachedFont;
-  const bytes = loadFontBytes();
-  const parsed = create(bytes);
+export function getFont(id: FontId): Font {
+  const cached = fontCache.get(id);
+  if (cached) return cached;
+  const parsed = create(loadFontBytes(id));
   if (!isFont(parsed)) {
-    throw new Error("The configured font asset is a collection; Wubble requires one font face.");
+    throw new Error(`Font asset ${id} is a collection; Wubble requires one font face.`);
   }
-  const font = parsed;
-  cachedFont = font;
-  return font;
+  fontCache.set(id, parsed);
+  return parsed;
 }
 
-/** Return missing codepoints (characters with no glyph / .notdef) */
-export function missingGlyphs(text: string): string[] {
-  const font = getFont();
+export function missingGlyphs(text: string, id: FontId): string[] {
+  const font = getFont(id);
   const missing: string[] = [];
   const seen = new Set<string>();
   for (const ch of text) {
@@ -36,8 +34,8 @@ export function missingGlyphs(text: string): string[] {
   return missing;
 }
 
-export function measureWidth(text: string, fontSize: number): number {
-  const font = getFont();
+export function measureWidth(text: string, fontSize: number, id: FontId): number {
+  const font = getFont(id);
   const run = font.layout(text);
   const w = (run.advanceWidth / font.unitsPerEm) * fontSize;
   return roundN(w);
@@ -54,8 +52,8 @@ export interface FontVerticalMetrics {
  * Resolve a centred SVG line box from the configured font's real vertical
  * metrics. The extra leading keeps adjacent ink and balloon edges separate.
  */
-export function fontVerticalMetrics(fontSize: number): FontVerticalMetrics {
-  const font = getFont();
+export function fontVerticalMetrics(fontSize: number, id: FontId): FontVerticalMetrics {
+  const font = getFont(id);
   const scale = fontSize / font.unitsPerEm;
   const ascent = roundN(font.ascent * scale);
   const descent = roundN(Math.abs(font.descent) * scale);
@@ -69,40 +67,37 @@ export function fontVerticalMetrics(fontSize: number): FontVerticalMetrics {
 /**
  * Wrap text to maxWidth using simple whitespace breaks.
  * Preserves explicit newlines in the source string.
- * Returns null if a single unbreakable token exceeds maxWidth.
  */
-export function wrapText(text: string, fontSize: number, maxWidth: number): string[] | null {
+export function wrapText(
+  text: string,
+  fontSize: number,
+  maxWidth: number,
+  id: FontId,
+): string[] | null {
   const paragraphs = text.split(/\n/);
-  const lines: string[] = [];
+  const out: string[] = [];
   for (const para of paragraphs) {
-    const words = para.split(/\s+/).filter((w) => w.length > 0);
+    const words = para.split(/\s+/).filter(Boolean);
     if (words.length === 0) {
-      lines.push("");
+      out.push("");
       continue;
     }
-    let current = "";
-    for (const word of words) {
-      const candidate = current.length === 0 ? word : `${current} ${word}`;
-      if (measureWidth(candidate, fontSize) <= maxWidth) {
-        current = candidate;
+    let line = "";
+    for (const w of words) {
+      const candidate = line ? `${line} ${w}` : w;
+      if (measureWidth(candidate, fontSize, id) <= maxWidth) {
+        line = candidate;
       } else {
-        if (current.length === 0) {
-          // single word too wide
-          if (measureWidth(word, fontSize) > maxWidth) return null;
-          lines.push(word);
-          current = "";
-        } else {
-          lines.push(current);
-          if (measureWidth(word, fontSize) > maxWidth) return null;
-          current = word;
-        }
+        if (line) out.push(line);
+        if (measureWidth(w, fontSize, id) > maxWidth) return null;
+        line = w;
       }
     }
-    if (current.length > 0) lines.push(current);
+    if (line) out.push(line);
   }
-  return lines;
+  return out;
 }
 
-export function lineHeightPx(fontSize: number): number {
-  return fontVerticalMetrics(fontSize).lineHeight;
+export function lineHeightPx(fontSize: number, id: FontId): number {
+  return fontVerticalMetrics(fontSize, id).lineHeight;
 }
