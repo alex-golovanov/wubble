@@ -1,0 +1,256 @@
+// Throwaway mockup: inked oval balloons for comparison. Not Wubble code.
+import { readFileSync, writeFileSync } from "node:fs";
+import { measureWidth, fontVerticalMetrics } from "../../../../src/font";
+import { fontBase64 } from "../../../../src/profile";
+
+type P = { x: number; y: number };
+type Balloon = {
+  text: string;
+  cx: number;
+  cy: number;
+  tip: P | null;
+  fontSize: number;
+  lines?: number;
+  mood?: "calm" | "urgent" | "hesitant";
+  shape?: number; // superellipse exponent override
+};
+type Spec = {
+  width: number;
+  height: number;
+  out: string;
+  balloons: Balloon[];
+  caps: boolean;
+  fill: string;
+  ink: string;
+  weight: number; // mean line weight, art px
+  swell: number; // 0..1 thick-thin amount
+  wobble: number; // low-frequency shape irregularity
+  exponent: number; // superellipse exponent
+};
+
+const FONT = "shantell-sans-semibold";
+const spec: Spec = JSON.parse(readFileSync(process.argv[2] ?? "", "utf8"));
+
+const add = (a: P, b: P): P => ({ x: a.x + b.x, y: a.y + b.y });
+const sub = (a: P, b: P): P => ({ x: a.x - b.x, y: a.y - b.y });
+const mul = (a: P, k: number): P => ({ x: a.x * k, y: a.y * k });
+const len = (a: P): number => Math.hypot(a.x, a.y);
+const unit = (a: P): P => mul(a, 1 / (len(a) || 1));
+const dot = (a: P, b: P): number => a.x * b.x + a.y * b.y;
+const lerp = (a: P, b: P, t: number): P => add(a, mul(sub(b, a), t));
+const quad = (a: P, c: P, b: P, t: number): P => lerp(lerp(a, c, t), lerp(c, b, t), t);
+const cubic = (a: P, c1: P, c2: P, b: P, t: number): P => lerp(quad(a, c1, c2, t), quad(c1, c2, b, t), t);
+const f = (n: number): string => n.toFixed(2);
+const poly = (pts: P[]): string =>
+  `M ${pts.map((p) => `${f(p.x)} ${f(p.y)}`).join(" L ")} Z`;
+
+function hash(s: string): number {
+  let h = 2166136261;
+  for (const ch of s) h = Math.imul(h ^ (ch.codePointAt(0) ?? 0), 16777619);
+  return ((h >>> 0) % 10000) / 10000;
+}
+
+/** Break text into n balanced lines, longest in the middle when it can be. */
+function balance(words: string[], n: number, size: number): string[] {
+  const total = measureWidth(words.join(" "), size, FONT);
+  const target = total / n;
+  const lines: string[] = [];
+  let line = "";
+  for (const w of words) {
+    const cand = line ? `${line} ${w}` : w;
+    if (line && measureWidth(cand, size, FONT) > target * 1.08 && lines.length < n - 1) {
+      lines.push(line);
+      line = w;
+    } else line = cand;
+  }
+  lines.push(line);
+  return lines;
+}
+
+/** Every way to break the words into n lines. */
+function splits(words: string[], n: number): string[][] {
+  if (n === 1) return [[words.join(" ")]];
+  const out: string[][] = [];
+  for (let i = 1; i <= words.length - n + 1; i++) {
+    for (const rest of splits(words.slice(i), n - 1)) out.push([words.slice(0, i).join(" "), ...rest]);
+  }
+  return out;
+}
+
+/** Oval semi-axes that hold these lines, for exponent n. */
+function ovalFor(lines: string[], size: number, lh: number, exponent?: number) {
+  const pad = size * 0.42;
+  const blockH = lines.length * lh;
+  const boxes: P[] = [];
+  lines.forEach((l, i) => {
+    const hw = measureWidth(l, size, FONT) / 2 + pad;
+    const y0 = i * lh - blockH / 2 - pad * 0.55;
+    const y1 = (i + 1) * lh - blockH / 2 + pad * 0.55;
+    boxes.push({ x: hw, y: Math.abs(y0) }, { x: hw, y: Math.abs(y1) });
+  });
+  const n = exponent ?? spec.exponent;
+  const blockW = Math.max(...boxes.map((p) => p.x));
+  const blockHalf = Math.max(...boxes.map((p) => p.y));
+  const aspect = blockW / blockHalf;
+  const fits = (s: number): boolean =>
+    boxes.every((p) => (p.x / (s * aspect)) ** n + (p.y / s) ** n <= 1);
+  let lo = blockHalf, hi = blockHalf * 3;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (fits(mid)) hi = mid;
+    else lo = mid;
+  }
+  return { a: hi * aspect, b: hi * 1.04 };
+}
+
+function layoutText(b: Balloon, caps: boolean) {
+  const text = caps ? b.text.toUpperCase() : b.text;
+  const words = text.split(/\s+/);
+  const m = fontVerticalMetrics(b.fontSize, FONT);
+  let best: string[] = [text];
+  let bestScore = Infinity;
+  const maxN = Math.min(4, words.length);
+  for (let n = b.lines ?? 1; n <= (b.lines ?? maxN); n++) {
+    for (const lines of splits(words, n)) {
+      const o = ovalFor(lines, b.fontSize, m.lineHeight);
+      const aspect = o.a / o.b;
+      // Smallest balloon wins; a sausage or a tower pays for its shape.
+      const shape = aspect > 2.4 ? (aspect / 2.4) ** 2 : aspect < 1.3 ? (1.3 / aspect) ** 2 : 1;
+      const score = o.a * o.b * shape;
+      if (score < bestScore) {
+        best = lines;
+        bestScore = score;
+      }
+    }
+  }
+  return { lines: best, metrics: m };
+}
+
+function balloonSvg(b: Balloon): string {
+  const { lines, metrics } = layoutText(b, spec.caps);
+  const lh = metrics.lineHeight;
+  const blockH = lines.length * lh;
+  const top = b.cy - blockH / 2;
+  const seed = hash(b.text);
+  const n = b.shape ?? spec.exponent + Math.min(1, (lines.length - 1) / 2) * 0.7 + (seed - 0.5) * 0.3;
+  const oval = ovalFor(lines, b.fontSize, lh, n);
+  const aAxis = oval.a;
+  const bAxis = oval.b;
+  const phi1 = seed * 6.283, phi2 = seed * 17.1;
+  const tilt = (seed - 0.5) * 0.05;
+  const N = 360;
+  const pts: P[] = [];
+  for (let i = 0; i < N; i++) {
+    const t = (i / N) * Math.PI * 2;
+    const c = Math.cos(t), s = Math.sin(t);
+    const r = 1 + spec.wobble * (0.6 * Math.sin(2 * t + phi1) + 0.4 * Math.sin(3 * t + phi2));
+    const x = aAxis * Math.sign(c) * Math.abs(c) ** (2 / n) * r;
+    const y = bAxis * Math.sign(s) * Math.abs(s) ** (2 / n) * r;
+    pts.push({
+      x: b.cx + x * Math.cos(tilt) - y * Math.sin(tilt),
+      y: b.cy + x * Math.sin(tilt) + y * Math.cos(tilt),
+    });
+  }
+  const normalAt = (i: number): P => {
+    const a = pts[(i - 1 + N) % N] ?? pts[0];
+    const c = pts[(i + 1) % N] ?? pts[0];
+    if (!a || !c) throw new Error("no points");
+    const tan = unit(sub(c, a));
+    return { x: tan.y, y: -tan.x }; // outward for this winding
+  };
+  const light = unit({ x: 0.6, y: 0.8 }); // heavier line bottom-right
+  const weightAt = (nrm: P): number => spec.weight * (1 + spec.swell * dot(nrm, light));
+  const outer = pts.map((p, i) => {
+    const nrm = normalAt(i);
+    return add(p, mul(nrm, weightAt(nrm)));
+  });
+
+  const parts: string[] = [];
+  let tailInk = "";
+  let tailFill = "";
+  if (b.tip) {
+    const tip = b.tip;
+    // Where the outline meets the ray from the centre to the tip.
+    const dir = unit(sub(tip, { x: b.cx, y: b.cy }));
+    let ai = 0;
+    let bestDot = -Infinity;
+    pts.forEach((p, i) => {
+      const d = dot(unit(sub(p, { x: b.cx, y: b.cy })), dir);
+      if (d > bestDot) {
+        bestDot = d;
+        ai = i;
+      }
+    });
+    const M = pts[ai] ?? pts[0];
+    if (!M) throw new Error("no attach");
+    const nrm = normalAt(ai);
+    // Each tail is a little different, and each mood draws differently.
+    const ts = hash(b.text + "|tail");
+    const jitter = (k: number, span: number): number => (hash(b.text + "|" + k) - 0.5) * 2 * span;
+    const mood = b.mood ?? "calm";
+    const moods = {
+      calm: { throat: 1.0, lean: 0.42, sway: 0.03, taper: 1.0 },
+      urgent: { throat: 1.5, lean: 0.0, sway: 0.0, taper: 1.9 },
+      hesitant: { throat: 0.6, lean: 0.3, sway: 0.16, taper: 0.75 },
+    };
+    const m = moods[mood];
+    const hw =
+      Math.max(9, Math.min(aAxis * 2 * 0.045, bAxis * 0.3)) * m.throat * (1 + jitter(1, 0.12));
+    const inset = spec.weight * 2 + 10;
+    const reach = len(sub(tip, M));
+    const heading = unit(sub(tip, M));
+    const perp = { x: -heading.y, y: heading.x };
+    // The tail leaves between square to the edge and straight at the speaker.
+    const lean = Math.max(0, Math.min(0.7, m.lean + (m.lean > 0 ? jitter(2, 0.12) : 0)));
+    const leaveDir = unit(add(mul(nrm, lean), mul(heading, 1 - lean)));
+    const swaySide = ts < 0.5 ? -1 : 1;
+    const sway = (m.sway + jitter(3, 0.03)) * swaySide;
+    const P0 = add(M, mul(nrm, -inset));
+    // A sway bends the tail both ways along its length: a soft S, not an elbow.
+    const C1 = add(add(M, mul(leaveDir, reach * 0.36)), mul(perp, -reach * sway * 0.7));
+    const C2 = add(sub(tip, mul(heading, reach * 0.32)), mul(perp, reach * sway));
+    const S = 64;
+    const sideA: P[] = [], sideB: P[] = [], inkA: P[] = [], inkB: P[] = [];
+    const wJoin = weightAt(nrm);
+    const wTip = spec.weight * 0.2;
+    // Which side of the spine is "A": keep A on the same side for the whole run.
+    for (let i = 0; i <= S; i++) {
+      const t = i / S;
+      const at = cubic(P0, C1, C2, tip, t);
+      const d = unit(sub(cubic(P0, C1, C2, tip, Math.min(1, t + 0.005)), cubic(P0, C1, C2, tip, Math.max(0, t - 0.005))));
+      const nn = { x: -d.y, y: d.x };
+      const half = hw * (1 - t) ** m.taper;
+      const ink = wJoin * (1 - t) + wTip * t;
+      const a = add(at, mul(nn, half));
+      const bb = add(at, mul(nn, -half));
+      sideA.push(a);
+      sideB.push(bb);
+      inkA.push(add(a, mul(nn, ink)));
+      inkB.push(add(bb, mul(nn, -ink)));
+    }
+    const endDir = unit(sub(tip, cubic(P0, C1, C2, tip, 0.97)));
+    const inkTip = add(tip, mul(endDir, wTip * 3));
+    tailInk = poly([...inkA, inkTip, ...inkB.reverse()]);
+    tailFill = poly([...sideA, ...sideB.slice(0, -1).reverse()]);
+  }
+  parts.push(`<path d="${poly(outer)}" fill="${spec.ink}"/>`);
+  if (tailInk) parts.push(`<path d="${tailInk}" fill="${spec.ink}"/>`);
+  parts.push(`<path d="${poly(pts)}" fill="${spec.fill}"/>`);
+  if (tailFill) parts.push(`<path d="${tailFill}" fill="${spec.fill}"/>`);
+  lines.forEach((l, i) => {
+    const y = top + i * lh + metrics.baselineOffset;
+    parts.push(
+      `<text x="${f(b.cx)}" y="${f(y)}" text-anchor="middle" font-family="Shantell Sans SemiBold" font-size="${f(b.fontSize)}" fill="#241f1a">${l.replace(/&/g, "&amp;")}</text>`,
+    );
+  });
+  return parts.join("\n");
+}
+
+const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${spec.width} ${spec.height}" width="${spec.width}" height="${spec.height}">
+<defs><style>@font-face { font-family: "Shantell Sans SemiBold"; src: url("data:font/otf;base64,${fontBase64(FONT)}"); }</style></defs>
+${spec.balloons.map(balloonSvg).join("\n")}
+</svg>
+`;
+writeFileSync(spec.out, svg);
+console.log(`wrote ${spec.out}`);
