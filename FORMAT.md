@@ -174,11 +174,12 @@ Initial body box in art pixels. Layout may **expand** this box (uniformly within
 }
 ```
 
-| Field                  | Notes                                            |
-| ---------------------- | ------------------------------------------------ |
-| `subjectId` / `anchor` | Must resolve on a subject                        |
-| `attachment`           | `top` \| `right` \| `bottom` \| `left` \| `auto` |
-| `bend`                 | Optional control point for the open tail         |
+| Field                  | Notes                                                                |
+| ---------------------- | -------------------------------------------------------------------- |
+| `subjectId` / `anchor` | Must resolve on a subject                                            |
+| `attachment`           | `top` \| `right` \| `bottom` \| `left` \| `auto`                     |
+| `bend`                 | Optional control point for the open tail                             |
+| `mood`                 | `calm` \| `urgent` \| `hesitant` — drawn bodies only; default `calm` |
 
 Geometry is a **single closed path** with an **open tail join** (no crossbar cutting the tip). `auto` picks the side from tip vs body center.
 
@@ -301,7 +302,9 @@ Wubble ships neutral defaults for each. What a style looks like, whether it may 
 wubble render page.json --locale en --output page.svg --config rules.json
 ```
 
-Library callers pass the same thing as `RenderOptions.styles` / `.fonts`. `tail` and `label` each take `required`, `allowed` or `forbidden`, and the validator reports `STYLE_RULE` when a manifest breaks them. A style may also set its outline — `cornerRadius` (0–1) and `edge` (`smooth`, `jagged`, `hand`) — and its line weight, `strokeWidth` (art px). A balloon's own `cornerRadius`, `edge` or `strokeWidth` still wins over its style.
+Library callers pass the same thing as `RenderOptions.styles` / `.fonts`. `tail` and `label` each take `required`, `allowed` or `forbidden`, and the validator reports `STYLE_RULE` when a manifest breaks them. A style may also set its outline — `cornerRadius` (0–1) and `edge` (`smooth`, `jagged`, `hand`) — its line weight, `strokeWidth` (art px), and its `fill` (`#rrggbb`). A balloon's own `cornerRadius`, `edge`, `fill` or `strokeWidth` still wins over its style.
+
+`body: "drawn"` draws a style's plain speech as an inked oval or pillow shaped around its text, instead of the rounded rectangle (`body: "rounded"`, the default). The text is broken again into the lines that give the smallest balloon, unless the manifest wrote `lines`. The ink line swells and thins around the body, and the tail varies a little from balloon to balloon; `tail.mood` (`calm`, `urgent`, `hesitant`) sets how it carries the line. A jagged, notched, chained or labelled balloon keeps the rounded builder. A drawn balloon renders as `data-body="drawn"` with two paths, `data-part="ink"` and `data-part="balloon"`. See `docs/superpowers/specs/2026-09-18-drawn-balloons-design.md`.
 
 Registered `shapeId` values (schema enum). All are implemented in profile `wubble-default` @ `0.1.0`.
 

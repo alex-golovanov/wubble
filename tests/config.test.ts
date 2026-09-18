@@ -38,6 +38,23 @@ describe("project config", () => {
     expect(word.errors.some((e) => e.includes("caption.strokeWidth"))).toBe(true);
   });
 
+  test("reads a register's body and fill", () => {
+    const { config, errors } = parseRenderConfig({
+      styles: { dialogue: { body: "drawn", fill: "#ffffff" } },
+    });
+    expect(errors).toEqual([]);
+    expect(config.styles?.dialogue?.body).toBe("drawn");
+    expect(config.styles?.dialogue?.fill).toBe("#ffffff");
+  });
+
+  test("refuses an unknown body and a fill that is not a colour", () => {
+    const { errors } = parseRenderConfig({
+      styles: { dialogue: { body: "blob", fill: "white" } },
+    });
+    expect(errors.some((e) => e.includes("dialogue.body"))).toBe(true);
+    expect(errors.some((e) => e.includes("dialogue.fill"))).toBe(true);
+  });
+
   test("an empty config is valid and changes nothing", () => {
     const { config, errors } = parseRenderConfig({});
     expect(errors).toEqual([]);

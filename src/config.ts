@@ -9,6 +9,7 @@
 import { readFileSync } from "node:fs";
 import { isFontId } from "./profile";
 import type {
+  BalloonBody,
   EdgeStyle,
   FontBinding,
   FontId,
@@ -28,6 +29,7 @@ const FONT_ROLES: FontRole[] = ["dialogue", "notice", "noticeLabel"];
 const LETTER_STYLES: LetterStyle[] = ["dialogue", "notice", "caption"];
 const REQUIREMENTS: Requirement[] = ["required", "allowed", "forbidden"];
 const EDGES: EdgeStyle[] = ["smooth", "jagged", "hand"];
+const BODIES: BalloonBody[] = ["rounded", "drawn"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -43,6 +45,10 @@ function isLetterStyle(value: string): value is LetterStyle {
 
 function isRequirement(value: unknown): value is Requirement {
   return typeof value === "string" && REQUIREMENTS.some((r) => r === value);
+}
+
+function isBody(value: unknown): value is BalloonBody {
+  return typeof value === "string" && BODIES.some((b) => b === value);
 }
 
 function isEdge(value: unknown): value is EdgeStyle {
@@ -95,6 +101,12 @@ function readStyle(
         if (key === "tail") patch.tail = value;
         else patch.label = value;
       } else errors.push(`${style}.${key} must be one of ${REQUIREMENTS.join(", ")}.`);
+    } else if (key === "body") {
+      if (isBody(value)) patch.body = value;
+      else errors.push(`${style}.body must be one of ${BODIES.join(", ")}.`);
+    } else if (key === "fill") {
+      if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) patch.fill = value;
+      else errors.push(`${style}.fill must be a colour written #rrggbb.`);
     } else if (key === "strokeWidth") {
       if (typeof value === "number" && Number.isFinite(value) && value > 0) {
         patch.strokeWidth = value;

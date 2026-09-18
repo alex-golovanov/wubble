@@ -1,6 +1,7 @@
 import { diag, makeReport } from "./diagnostics";
 import { validateSchema } from "./schema";
 import { fitBalloonText, fitStyleOf, letterFontsFor } from "./layout";
+import { drawnStrokeWidth, layoutDrawn, usesDrawnBody } from "./drawn-layout";
 import {
   isShapeImplemented,
   PROFILE,
@@ -148,7 +149,18 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
     diagnostics.push(...layout.diagnostics);
     if (!layout.fitted) continue;
 
-    const body = layout.fitted.bodyBounds;
+    const body = usesDrawnBody(item, rules, content)
+      ? layoutDrawn(
+          item,
+          content,
+          placement,
+          layout.fitted.fontSize,
+          fonts,
+          drawnStrokeWidth(item, rules),
+          null,
+          null,
+        ).balloon.bounds
+      : layout.fitted.bodyBounds;
     bodyBoundsByItem.set(item.id, body);
 
     if (!boundsInside(body, space.width, space.height)) {

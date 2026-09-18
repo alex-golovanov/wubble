@@ -80,11 +80,16 @@ export interface LocaleContent {
   label?: string;
 }
 
+/** How a drawn tail carries the line: ordinary, pressing, or wavering. */
+export type TailMood = "calm" | "urgent" | "hesitant";
+
 export interface Tail {
   subjectId: string;
   anchor: string;
   attachment: "top" | "right" | "bottom" | "left" | "auto";
   bend?: Point;
+  /** Drawn bodies only. Default `calm`. */
+  mood?: TailMood;
 }
 
 export interface LocaleOverride {
@@ -111,6 +116,9 @@ export type ShapeId =
  * reads as drawn rather than constructed.
  */
 export type EdgeStyle = "smooth" | "jagged" | "hand";
+
+/** `rounded`: the rounded-rect builder. `drawn`: an inked oval or pillow shaped around the text. */
+export type BalloonBody = "rounded" | "drawn";
 
 /**
  * Lettering register — what kind of object this is on the page, named for its
@@ -159,6 +167,10 @@ export interface StyleProfile {
   labelBrackets: boolean;
   /** Balloon line weight in art px. Unset: the shape's own default. */
   strokeWidth?: number;
+  /** Body builder. Unset: `rounded`. */
+  body?: BalloonBody;
+  /** Balloon fill colour, `#rrggbb`. Unset: the shape's own default. */
+  fill?: string;
 }
 
 /** Per-render house rules, layered over the profile's defaults. */

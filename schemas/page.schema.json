@@ -212,6 +212,9 @@
         },
         "bend": {
           "$ref": "#/$defs/point"
+        },
+        "mood": {
+          "enum": ["calm", "urgent", "hesitant"]
         }
       }
     },

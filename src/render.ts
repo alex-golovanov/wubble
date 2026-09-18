@@ -8,6 +8,8 @@ import {
   type LetterFonts,
 } from "./layout";
 import { buildShape } from "./shapes/index";
+import { drawnStrokeWidth, layoutDrawn, usesDrawnBody } from "./drawn-layout";
+import type { DrawnLayout } from "./drawn-layout";
 import { isRefShapeId, refLobeContentBand, contentBandBox } from "./shapes/ref-sheet";
 import {
   fontAsset,
@@ -16,6 +18,7 @@ import {
   isShapeImplemented,
   resolveFontBinding,
   resolveStyleProfile,
+  shapeProfile,
   styleOf,
   type FontId,
 } from "./profile";
@@ -123,6 +126,37 @@ function strokeWidthOf(item: BalloonItem, rules: StyleProfile): { strokeWidth?: 
   return weight !== undefined ? { strokeWidth: weight } : {};
 }
 
+/** A balloon's own fill wins, then its register's house rule, then the shape's default. */
+function fillOf(item: BalloonItem, rules: StyleProfile): { fill?: string } {
+  const fill = item.fill ?? rules.fill;
+  return fill !== undefined ? { fill } : {};
+}
+
+/** A drawn balloon: its ink, the fill on top, then its lines centred on the body. */
+function drawnGroup(
+  item: BalloonItem,
+  drawn: DrawnLayout,
+  fonts: LetterFonts,
+  ink: string,
+  fill: string,
+): string {
+  const top = drawn.center.y - (drawn.lines.length * drawn.lineHeight) / 2;
+  const family = escapeXml(fontAsset(fonts.text).family);
+  const lines = drawn.lines
+    .map((line, i) => {
+      const y = top + i * drawn.lineHeight + drawn.baselineOffset;
+      return `      <text x="${fmt(drawn.center.x)}" y="${fmt(y)}" text-anchor="middle" font-family="${family}" font-size="${fmt(drawn.fontSize)}">${escapeXml(line)}</text>`;
+    })
+    .join("\n");
+  return [
+    `  <g id="${escapeXml(item.id)}" data-shape="${item.shapeId}" data-style="${styleOf(item)}" data-body="drawn">`,
+    `    <path data-part="ink" d="${drawn.balloon.ink}" fill="${ink}"/>`,
+    `    <path data-part="balloon" d="${drawn.balloon.fill}" fill="${fill}"/>`,
+    `    <g data-part="text" fill="${ink}" color="${ink}">\n${lines}\n    </g>`,
+    `  </g>`,
+  ].join("\n");
+}
+
 function renderBalloonGroup(
   manifest: PageManifest,
   item: BalloonItem,
@@ -139,6 +173,27 @@ function renderBalloonGroup(
   const fitStyle = fitStyleOf(item, styles);
   const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle, fonts);
   if (!layout.fitted) return null;
+
+  if (usesDrawnBody(item, rules, content)) {
+    const shape = shapeProfile(item.shapeId);
+    const drawn = layoutDrawn(
+      item,
+      content,
+      placement,
+      layout.fitted.fontSize,
+      fonts,
+      drawnStrokeWidth(item, rules),
+      resolveAnchor(manifest, item).tip,
+      resolveBend(item, locale) ?? null,
+    );
+    return drawnGroup(
+      item,
+      drawn,
+      fonts,
+      item.stroke ?? shape.stroke,
+      fillOf(item, rules).fill ?? shape.fill,
+    );
+  }
 
   const body = layout.fitted.bodyBounds;
   const lobeFits: { body: Bounds; fitted: FittedText }[] = [];
@@ -191,7 +246,7 @@ function renderBalloonGroup(
     attachment,
     ...fitStyle,
     ...(item.notchTop !== undefined ? { notchTop: item.notchTop } : {}),
-    ...(item.fill !== undefined ? { fill: item.fill } : {}),
+    ...fillOf(item, rules),
     ...(item.stroke !== undefined ? { stroke: item.stroke } : {}),
     ...strokeWidthOf(item, rules),
   });
