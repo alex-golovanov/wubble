@@ -28,3 +28,14 @@ export function segmentCrossesBounds(a: Point, b: Point, rect: Bounds): boolean 
   }
   return false;
 }
+
+/**
+ * How far a point lies outside a balloon body; 0 when it is inside. A tail
+ * shorter than a quarter of the balloon's short side reads as a bump in the
+ * outline, not as a pointer to a speaker.
+ */
+export function distanceOutside(p: Point, b: Bounds): number {
+  const dx = Math.max(b.x - p.x, 0, p.x - (b.x + b.width));
+  const dy = Math.max(b.y - p.y, 0, p.y - (b.y + b.height));
+  return Math.hypot(dx, dy);
+}

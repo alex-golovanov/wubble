@@ -249,20 +249,21 @@ Validation returns a non-zero exit code for errors and a structured JSON report 
 
 Required diagnostic codes:
 
-| Code                      | Level   | Meaning                                                       |
-| ------------------------- | ------- | ------------------------------------------------------------- |
-| `SCHEMA_INVALID`          | error   | Manifest does not match the declared schema.                  |
-| `LOCALE_MISSING`          | error   | A requested locale has no content for an item.                |
-| `GLYPH_MISSING`           | error   | The configured font cannot render a required character.       |
-| `TEXT_OVERFLOW`           | error   | Text cannot fit within hard type and line limits.             |
-| `OUT_OF_BOUNDS`           | error   | Visible geometry leaves the coordinate space.                 |
-| `HARD_EXCLUSION_OVERLAP`  | error   | Balloon body covers a hard exclusion zone.                    |
-| `UNKNOWN_SHAPE`           | error   | Manifest requests an unregistered component.                  |
-| `UNKNOWN_ANCHOR`          | error   | Tail target cannot resolve to a named subject anchor.         |
-| `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap.                                   |
-| `SOFT_EXCLUSION_OVERLAP`  | warning | Balloon body covers a soft exclusion zone.                    |
-| `TAIL_CROSSES_BODY`       | warning | Tail crosses a different balloon or protected subject region. |
-| `READING_ORDER_AMBIGUOUS` | warning | Geometric ordering conflicts with manifest item order.        |
+| Code                      | Level   | Meaning                                                           |
+| ------------------------- | ------- | ----------------------------------------------------------------- |
+| `SCHEMA_INVALID`          | error   | Manifest does not match the declared schema.                      |
+| `LOCALE_MISSING`          | error   | A requested locale has no content for an item.                    |
+| `GLYPH_MISSING`           | error   | The configured font cannot render a required character.           |
+| `TEXT_OVERFLOW`           | error   | Text cannot fit within hard type and line limits.                 |
+| `OUT_OF_BOUNDS`           | error   | Visible geometry leaves the coordinate space.                     |
+| `HARD_EXCLUSION_OVERLAP`  | error   | Balloon body covers a hard exclusion zone.                        |
+| `UNKNOWN_SHAPE`           | error   | Manifest requests an unregistered component.                      |
+| `UNKNOWN_ANCHOR`          | error   | Tail target cannot resolve to a named subject anchor.             |
+| `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap.                                       |
+| `SOFT_EXCLUSION_OVERLAP`  | warning | Balloon body covers a soft exclusion zone.                        |
+| `TAIL_CROSSES_BODY`       | warning | Tail crosses a different balloon or protected subject region.     |
+| `TAIL_TOO_SHORT`          | error   | Tail tip lies inside its balloon, or too close to read as a tail. |
+| `READING_ORDER_AMBIGUOUS` | warning | Geometric ordering conflicts with manifest item order.            |
 
 Example report:
 

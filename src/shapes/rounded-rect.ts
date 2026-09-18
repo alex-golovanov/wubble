@@ -76,37 +76,57 @@ function radiusPx(body: Bounds, cornerRadius: number, edge: EdgeStyle): number {
 }
 
 /**
- * Tail base, scaled to how far the tail has to travel. A long tail drawn on a
- * narrow base reads as a needle; comic tails widen as they reach.
+ * Half the tail's throat: how wide the tail is where it leaves the balloon,
+ * before the rounded joins flare it into the outline.
  *
- * The base can never be wider than the flat run it leaves from — beyond that
+ * A tail is a pointer, not a shape of its own. The throat stays slim — under a
+ * tenth of the balloon — and slims a little more as the reach grows, so a
+ * distant speaker gets a long fine tail rather than a stretched wedge.
+ *
+ * The throat can never be wider than the flat run it leaves from — beyond that
  * the join points fall inside the corner arc and the outline folds back on
  * itself.
  */
-function tailHalfWidth(body: Bounds, tip: Point, side: Side, rr: number): number {
+export function tailHalfWidth(body: Bounds, tip: Point, side: Side, rr: number): number {
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   const reach = Math.hypot(tip.x - cx, tip.y - cy);
-  // The base belongs to the balloon, not to the journey — and the two ends of
-  // that journey want different shapes. A speaker inside the panel gets a short
-  // wide wedge; a distant or off-panel speaker gets a long slim pointer, which
-  // is what a wedge stretched that far would stop reading as.
   const relative = reach / Math.max(1, body.width);
   const far = Math.max(0, Math.min(1, (relative - 0.8) / 1.6));
-  const wanted = body.width * (0.075 - 0.03 * far);
+  const wanted = body.width * (0.042 - 0.006 * far);
   const room = Math.max(0, (straightRun(body, side, rr) - 8) / 2);
-  const ceiling = Math.min(body.height * 0.28, body.width * 0.16, room);
-  return Math.max(0, Math.min(ceiling, Math.max(7, wanted)));
+  const ceiling = Math.min(body.height * 0.2, body.width * 0.05, room);
+  return Math.max(0, Math.min(ceiling, Math.max(9, wanted)));
 }
 
-/** Join points on attachment edge. `first`/`second` are in clockwise outline order. */
+/**
+ * Where the tail meets the edge. `first`/`second` are in clockwise outline
+ * order and mark where the outline leaves the flat edge; `fillet` is how far
+ * each rounded join reaches along the edge before the throat begins.
+ */
+interface TailJoin {
+  first: Point;
+  second: Point;
+  mid: Point;
+  fillet: number;
+}
+
+/** A drawn tail flows out of the outline; a jagged one keeps its hard kink. */
+function filletFor(halfWidth: number, edge: EdgeStyle): number {
+  if (edge === "jagged") return 0;
+  return Math.min(22, Math.max(10, halfWidth));
+}
+
 function joinClockwise(
   body: Bounds,
   side: Side,
   tip: Point,
   rr: number,
-): { first: Point; second: Point; mid: Point } {
-  const hw = tailHalfWidth(body, tip, side, rr);
+  edge: EdgeStyle,
+): TailJoin {
+  const throat = tailHalfWidth(body, tip, side, rr);
+  const fillet = filletFor(throat, edge);
+  const hw = throat + fillet;
   const cx = body.x + body.width / 2;
   const cy = body.y + body.height / 2;
   switch (side) {
@@ -120,6 +140,7 @@ function joinClockwise(
         first: { x: midX + hw, y }, // right (hit first clockwise)
         second: { x: midX - hw, y }, // left
         mid: { x: midX, y },
+        fillet,
       };
     }
     case "top": {
@@ -133,6 +154,7 @@ function joinClockwise(
         first: { x: midX - hw, y },
         second: { x: midX + hw, y },
         mid: { x: midX, y },
+        fillet,
       };
     }
     case "right": {
@@ -146,6 +168,7 @@ function joinClockwise(
         first: { x, y: midY - hw },
         second: { x, y: midY + hw },
         mid: { x, y: midY },
+        fillet,
       };
     }
     case "left": {
@@ -159,6 +182,7 @@ function joinClockwise(
         first: { x, y: midY + hw },
         second: { x, y: midY - hw },
         mid: { x, y: midY },
+        fillet,
       };
     }
   }
@@ -186,27 +210,65 @@ function emit(cmds: Cmd[]): string {
   return parts.join(" ");
 }
 
-function pushSmoothTail(
-  cmds: Cmd[],
-  enter: Point,
-  tip: Point,
-  exit: Point,
-  bend: Point | null,
-): void {
-  const target = bend ?? tip;
-  // Each control point advances from its own body join toward the requested
-  // target. This prevents a control point from falling behind its join and
-  // creating a reverse hook before the tail begins.
-  const c1 = {
-    x: enter.x + (target.x - enter.x) * 0.32,
-    y: enter.y + (target.y - enter.y) * 0.32,
-  };
-  const c2 = {
-    x: exit.x + (target.x - exit.x) * 0.32,
-    y: exit.y + (target.y - exit.y) * 0.32,
-  };
-  cmds.push({ t: "Q", c: c1, p: tip });
-  cmds.push({ t: "Q", c: c2, p: exit });
+function lerp(a: Point, b: Point, t: number): Point {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+function quadAt(a: Point, control: Point, b: Point, t: number): Point {
+  return lerp(lerp(a, control, t), lerp(control, b, t), t);
+}
+
+/**
+ * The classic drawn tail: it leaves the balloon square to the edge, bends
+ * gently toward the speaker, tapers to a point, and flows into the outline
+ * through a rounded join on each side.
+ *
+ * The tail is built on a spine — a curve from the throat's middle to the tip.
+ * Both sides follow that one spine, so they bow the same way. A tip straight
+ * out from the edge gives a straight tail; a tip off to one side gives a curve.
+ */
+function pushDrawnTail(cmds: Cmd[], join: TailJoin, tip: Point, bend: Point | null): void {
+  const { first, second, mid, fillet } = join;
+  const run = Math.hypot(second.x - first.x, second.y - first.y) || 1;
+  const along = { x: (second.x - first.x) / run, y: (second.y - first.y) / run };
+  // Clockwise outline in y-down space: the outside is to the left of travel.
+  const outward = { x: along.y, y: -along.x };
+  const throat = run / 2 - fillet;
+  const enter = { x: mid.x - along.x * throat, y: mid.y - along.y * throat };
+  const exit = { x: mid.x + along.x * throat, y: mid.y + along.y * throat };
+
+  const reach = Math.hypot(tip.x - mid.x, tip.y - mid.y) || 1;
+  const outReach = (tip.x - mid.x) * outward.x + (tip.y - mid.y) * outward.y;
+  let spine: Point;
+  if (bend) {
+    spine = bend;
+  } else {
+    // Lean the spine out of the edge by part of how far the tip lies out from
+    // it, then halve the lean toward the straight line: enough to read as
+    // drawn, not so much that a tail running sideways hooks.
+    const lean = Math.max(reach * 0.08, outReach * 0.55);
+    const square = { x: mid.x + outward.x * lean, y: mid.y + outward.y * lean };
+    spine = lerp(lerp(mid, tip, 0.5), square, 0.45);
+  }
+
+  // Each side's control sits off the spine, across the tail's run, by part of
+  // the throat, so the tail tapers evenly and keeps some body before the point
+  // whichever way it runs.
+  const heading = { x: (tip.x - mid.x) / reach, y: (tip.y - mid.y) / reach };
+  const across = { x: -heading.y, y: heading.x };
+  const toEnter = (enter.x - mid.x) * across.x + (enter.y - mid.y) * across.y >= 0 ? 1 : -1;
+  const spread = throat * 0.62 * toEnter;
+  const enterControl = { x: spine.x + across.x * spread, y: spine.y + across.y * spread };
+  const exitControl = { x: spine.x - across.x * spread, y: spine.y - across.y * spread };
+
+  // The rounded joins take a short stretch of each side; the rest runs to the tip.
+  const t = fillet > 0 ? Math.min(0.3, (fillet * 1.3) / reach) : 0;
+  const inJoin = quadAt(enter, enterControl, tip, t);
+  const outJoin = quadAt(tip, exitControl, exit, 1 - t);
+  cmds.push({ t: "Q", c: enter, p: inJoin });
+  cmds.push({ t: "Q", c: lerp(enterControl, tip, t), p: tip });
+  cmds.push({ t: "Q", c: lerp(tip, exitControl, 1 - t), p: outJoin });
+  cmds.push({ t: "Q", c: exit, p: second });
 }
 
 function pushJaggedTail(
@@ -241,15 +303,13 @@ function pushJaggedTail(
 
 function pushTail(
   cmds: Cmd[],
-  enter: Point,
+  join: TailJoin,
   tip: Point,
-  exit: Point,
   bend: Point | null,
-  mid: Point,
   edge: EdgeStyle,
 ): void {
-  if (edge === "jagged") pushJaggedTail(cmds, enter, tip, exit, bend, mid);
-  else pushSmoothTail(cmds, enter, tip, exit, bend);
+  if (edge === "jagged") pushJaggedTail(cmds, join.first, tip, join.second, bend, join.mid);
+  else pushDrawnTail(cmds, join, tip, bend);
 }
 
 /**
@@ -350,7 +410,7 @@ function singleBodyPath(
   const y1 = body.y + body.height;
 
   const side = tip ? resolveAttachmentSide(body, tip, attachment, rr) : null;
-  const join = tip && side ? joinClockwise(body, side, tip, rr) : null;
+  const join = tip && side ? joinClockwise(body, side, tip, rr, edge) : null;
 
   const cmds: Cmd[] = [];
   cmds.push({ t: "M", p: { x: x0 + rr, y: y0 } });
@@ -358,7 +418,7 @@ function singleBodyPath(
   // TOP (L→R)
   if (side === "top" && join && tip) {
     edgeTo(cmds, { x: x0 + rr, y: y0 }, join.first, edge, body);
-    pushTail(cmds, join.first, tip, join.second, bend, join.mid, edge);
+    pushTail(cmds, join, tip, bend, edge);
     edgeTo(cmds, join.second, { x: x1 - rr, y: y0 }, edge, body);
   } else if (notchTop) {
     const nx = body.x + body.width * 0.62;
@@ -378,7 +438,7 @@ function singleBodyPath(
   // RIGHT (T→B)
   if (side === "right" && join && tip) {
     edgeTo(cmds, { x: x1, y: y0 + rr }, join.first, edge, body);
-    pushTail(cmds, join.first, tip, join.second, bend, join.mid, edge);
+    pushTail(cmds, join, tip, bend, edge);
     edgeTo(cmds, join.second, { x: x1, y: y1 - rr }, edge, body);
   } else {
     edgeTo(cmds, { x: x1, y: y0 + rr }, { x: x1, y: y1 - rr }, edge, body);
@@ -388,7 +448,7 @@ function singleBodyPath(
   // BOTTOM (R→L)
   if (side === "bottom" && join && tip) {
     edgeTo(cmds, { x: x1 - rr, y: y1 }, join.first, edge, body);
-    pushTail(cmds, join.first, tip, join.second, bend, join.mid, edge);
+    pushTail(cmds, join, tip, bend, edge);
     edgeTo(cmds, join.second, { x: x0 + rr, y: y1 }, edge, body);
   } else {
     edgeTo(cmds, { x: x1 - rr, y: y1 }, { x: x0 + rr, y: y1 }, edge, body);
@@ -398,7 +458,7 @@ function singleBodyPath(
   // LEFT (B→T)
   if (side === "left" && join && tip) {
     edgeTo(cmds, { x: x0, y: y1 - rr }, join.first, edge, body);
-    pushTail(cmds, join.first, tip, join.second, bend, join.mid, edge);
+    pushTail(cmds, join, tip, bend, edge);
     edgeTo(cmds, join.second, { x: x0, y: y0 + rr }, edge, body);
   } else {
     edgeTo(cmds, { x: x0, y: y1 - rr }, { x: x0, y: y0 + rr }, edge, body);
@@ -472,9 +532,9 @@ function chainedPath(
   if (tailIdx === 0 && tip) {
     const side = resolveAttachmentSide(top, tip, attachment, rTop);
     if (side === "top") {
-      const j = joinClockwise(top, side, tip, rTop);
+      const j = joinClockwise(top, side, tip, rTop, edge);
       edgeTo(cmds, { x: top.x + rTop, y: top.y }, j.first, edge, top);
-      pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
+      pushTail(cmds, j, tip, bend, edge);
       edgeTo(cmds, j.second, { x: top.x + top.width - rTop, y: top.y }, edge, top);
     } else {
       edgeTo(
@@ -513,9 +573,9 @@ function chainedPath(
     const rightBot = { x: b.x + b.width, y: b.y + b.height - r };
 
     if (i === tailIdx && tip && resolveAttachmentSide(b, tip, attachment, r) === "right") {
-      const j = joinClockwise(b, "right", tip, r);
+      const j = joinClockwise(b, "right", tip, r, edge);
       edgeTo(cmds, rightTop, j.first, edge, b);
-      pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
+      pushTail(cmds, j, tip, bend, edge);
       edgeTo(cmds, j.second, rightBot, edge, b);
     } else {
       edgeTo(cmds, i === 0 ? rightTop : rightTop, rightBot, edge, b);
@@ -554,9 +614,9 @@ function chainedPath(
       tip &&
       resolveAttachmentSide(b, tip, attachment, r) === "bottom"
     ) {
-      const j = joinClockwise(b, "bottom", tip, r);
+      const j = joinClockwise(b, "bottom", tip, r, edge);
       edgeTo(cmds, bottomRight, j.first, edge, b);
-      pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
+      pushTail(cmds, j, tip, bend, edge);
       edgeTo(cmds, j.second, bottomLeft, edge, b);
     } else {
       edgeTo(cmds, bottomRight, bottomLeft, edge, b);
@@ -572,9 +632,9 @@ function chainedPath(
     const leftTop = { x: b.x, y: b.y + r };
 
     if (i === tailIdx && tip && resolveAttachmentSide(b, tip, attachment, r) === "left") {
-      const j = joinClockwise(b, "left", tip, r);
+      const j = joinClockwise(b, "left", tip, r, edge);
       edgeTo(cmds, leftBot, j.first, edge, b);
-      pushTail(cmds, j.first, tip, j.second, bend, j.mid, edge);
+      pushTail(cmds, j, tip, bend, edge);
       edgeTo(cmds, j.second, leftTop, edge, b);
     } else {
       edgeTo(cmds, leftBot, leftTop, edge, b);

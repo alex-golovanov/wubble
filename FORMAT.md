@@ -301,7 +301,7 @@ Wubble ships neutral defaults for each. What a style looks like, whether it may 
 wubble render page.json --locale en --output page.svg --config rules.json
 ```
 
-Library callers pass the same thing as `RenderOptions.styles` / `.fonts`. `tail` and `label` each take `required`, `allowed` or `forbidden`, and the validator reports `STYLE_RULE` when a manifest breaks them.
+Library callers pass the same thing as `RenderOptions.styles` / `.fonts`. `tail` and `label` each take `required`, `allowed` or `forbidden`, and the validator reports `STYLE_RULE` when a manifest breaks them. A style may also set its outline — `cornerRadius` (0–1) and `edge` (`smooth`, `jagged`, `hand`) — and its line weight, `strokeWidth` (art px). A balloon's own `cornerRadius`, `edge` or `strokeWidth` still wins over its style.
 
 Registered `shapeId` values (schema enum). All are implemented in profile `wubble-default` @ `0.1.0`.
 
@@ -384,20 +384,21 @@ Structured report:
 }
 ```
 
-| Code                      | Level   | Meaning                                        |
-| ------------------------- | ------- | ---------------------------------------------- |
-| `SCHEMA_INVALID`          | error   | Manifest fails JSON Schema                     |
-| `LOCALE_MISSING`          | error   | No content for requested locale (item or lobe) |
-| `GLYPH_MISSING`           | error   | Font cannot render a required character        |
-| `TEXT_OVERFLOW`           | error   | Cannot fit within type / line / expand limits  |
-| `OUT_OF_BOUNDS`           | error   | Body (or lobe) leaves the coordinate space     |
-| `HARD_EXCLUSION_OVERLAP`  | error   | Body covers a hard exclusion                   |
-| `UNKNOWN_SHAPE`           | error   | Shape not implemented in profile               |
-| `UNKNOWN_ANCHOR`          | error   | Tail subject/anchor missing                    |
-| `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap                     |
-| `SOFT_EXCLUSION_OVERLAP`  | warning | Body covers a soft exclusion                   |
-| `TAIL_CROSSES_BODY`       | warning | Tail crosses another balloon                   |
-| `READING_ORDER_AMBIGUOUS` | warning | Geometry conflicts with item order             |
+| Code                      | Level   | Meaning                                                                     |
+| ------------------------- | ------- | --------------------------------------------------------------------------- |
+| `SCHEMA_INVALID`          | error   | Manifest fails JSON Schema                                                  |
+| `LOCALE_MISSING`          | error   | No content for requested locale (item or lobe)                              |
+| `GLYPH_MISSING`           | error   | Font cannot render a required character                                     |
+| `TEXT_OVERFLOW`           | error   | Cannot fit within type / line / expand limits                               |
+| `OUT_OF_BOUNDS`           | error   | Body (or lobe) leaves the coordinate space                                  |
+| `HARD_EXCLUSION_OVERLAP`  | error   | Body covers a hard exclusion                                                |
+| `UNKNOWN_SHAPE`           | error   | Shape not implemented in profile                                            |
+| `UNKNOWN_ANCHOR`          | error   | Tail subject/anchor missing                                                 |
+| `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap                                                  |
+| `SOFT_EXCLUSION_OVERLAP`  | warning | Body covers a soft exclusion                                                |
+| `TAIL_CROSSES_BODY`       | warning | Tail crosses another balloon                                                |
+| `TAIL_TOO_SHORT`          | error   | Tail tip inside its balloon, or under ¼ of the balloon's short side past it |
+| `READING_ORDER_AMBIGUOUS` | warning | Geometry conflicts with item order                                          |
 
 `valid` is false if any **error** is present. `render` / `proof` refuse to write output on errors. Warnings do not block. Suggestions are advisory — the renderer never auto-applies them.
 

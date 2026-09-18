@@ -29,6 +29,8 @@ import type {
   PageManifest,
   RenderOptions,
   RenderResult,
+  StyleOverrides,
+  StyleProfile,
 } from "./types";
 
 function escapeXml(s: string): string {
@@ -115,19 +117,26 @@ function textNodesFor(
   return `    <g data-part="text" fill="${fill}" color="${fill}">\n${nodes.join("\n")}\n    </g>`;
 }
 
+/** A balloon's own line weight wins, then its register's house rule, then the shape's default. */
+function strokeWidthOf(item: BalloonItem, rules: StyleProfile): { strokeWidth?: number } {
+  const weight = item.strokeWidth ?? rules.strokeWidth;
+  return weight !== undefined ? { strokeWidth: weight } : {};
+}
+
 function renderBalloonGroup(
   manifest: PageManifest,
   item: BalloonItem,
   locale: string,
   fonts: LetterFonts,
-  brackets: boolean,
+  rules: StyleProfile,
+  styles: StyleOverrides | undefined,
 ): string | null {
   if (!isShapeImplemented(item.shapeId)) return null;
   const content = item.content[locale];
   if (!content) return null;
 
   const placement = resolvePlacement(item, locale);
-  const fitStyle = fitStyleOf(item);
+  const fitStyle = fitStyleOf(item, styles);
   const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle, fonts);
   if (!layout.fitted) return null;
 
@@ -180,11 +189,11 @@ function renderBalloonGroup(
     tip,
     bend,
     attachment,
-    ...fitStyleOf(item),
+    ...fitStyle,
     ...(item.notchTop !== undefined ? { notchTop: item.notchTop } : {}),
     ...(item.fill !== undefined ? { fill: item.fill } : {}),
     ...(item.stroke !== undefined ? { stroke: item.stroke } : {}),
-    ...(item.strokeWidth !== undefined ? { strokeWidth: item.strokeWidth } : {}),
+    ...strokeWidthOf(item, rules),
   });
 
   const parts: string[] = [];
@@ -195,11 +204,27 @@ function renderBalloonGroup(
     `    <path data-part="balloon" d="${geom.path}" fill="${geom.fill}" stroke="${geom.stroke}" stroke-width="${fmt(geom.strokeWidth)}" stroke-linejoin="round" stroke-linecap="round"/>`,
   );
   parts.push(
-    textNodesFor(layout.fitted, body, item.shapeId, geom.stroke, fonts, brackets, fitStyle),
+    textNodesFor(
+      layout.fitted,
+      body,
+      item.shapeId,
+      geom.stroke,
+      fonts,
+      rules.labelBrackets,
+      fitStyle,
+    ),
   );
   for (const lobe of lobeFits) {
     parts.push(
-      textNodesFor(lobe.fitted, lobe.body, item.shapeId, geom.stroke, fonts, brackets, fitStyle),
+      textNodesFor(
+        lobe.fitted,
+        lobe.body,
+        item.shapeId,
+        geom.stroke,
+        fonts,
+        rules.labelBrackets,
+        fitStyle,
+      ),
     );
   }
   parts.push(`  </g>`);
@@ -237,7 +262,7 @@ function serializeSvg(manifest: PageManifest, locale: string, options: RenderOpt
     const style = styleOf(item);
     const rules = resolveStyleProfile(style, options.styles);
     const fonts = letterFontsFor(style, binding, options.styles);
-    const g = renderBalloonGroup(manifest, item, locale, fonts, rules.labelBrackets);
+    const g = renderBalloonGroup(manifest, item, locale, fonts, rules, options.styles);
     if (!g) continue;
     groups.push(g);
     useFont(fonts.text);

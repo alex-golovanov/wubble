@@ -16,6 +16,7 @@ export type DiagnosticCode =
   | "BALLOON_OVERLAP"
   | "SOFT_EXCLUSION_OVERLAP"
   | "TAIL_CROSSES_BODY"
+  | "TAIL_TOO_SHORT"
   | "READING_ORDER_AMBIGUOUS"
   | "STYLE_RULE";
 
@@ -156,6 +157,8 @@ export interface StyleProfile {
   label: Requirement;
   /** Draw ⟦ ⟧ marks around the label. */
   labelBrackets: boolean;
+  /** Balloon line weight in art px. Unset: the shape's own default. */
+  strokeWidth?: number;
 }
 
 /** Per-render house rules, layered over the profile's defaults. */

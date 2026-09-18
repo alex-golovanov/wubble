@@ -89,7 +89,7 @@ Optional per-balloon fields (schema `0.1.0`):
 - **`fill` / `stroke` / `strokeWidth`** — optional appearance overrides; default from `PROFILE.shapes.speech`.
 - **`lobes`** — additional `{ placement, content }` lobes fused with the primary body into one chained silhouette (open necks, no crossbars; one tail).
 
-Geometry is a single closed path with an **open tail join** (no crossbar cutting the tip). Ref-sheet shapes map fixed templates; they ignore radius/edge for the silhouette.
+Geometry is a single closed path with an **open tail join** (no crossbar cutting the tip). A drawn tail has a slim throat, bends gently from the edge toward its speaker, and flows into the outline through rounded joins; a `jagged` tail keeps its hard kink. Ref-sheet shapes map fixed templates; they ignore radius/edge for the silhouette.
 
 **Text-driven sizing:** measure text → expand body with padding → map silhouette (then shrink type only if expand limits are exhausted).
 

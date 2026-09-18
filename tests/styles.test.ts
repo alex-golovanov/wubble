@@ -69,6 +69,13 @@ const HOUSE: StyleOverrides = {
   notice: { label: "required", labelBrackets: true },
 };
 
+/** The one balloon outline in a render, without the embedded fonts around it. */
+function outline(svg: string): string {
+  const tag = svg.match(/<path data-part="balloon"[^>]*>/)?.[0];
+  if (tag === undefined) throw new Error("render carries no balloon outline");
+  return tag;
+}
+
 function codes(manifest: unknown, styles?: StyleOverrides): string[] {
   const options = { locale: "en", profileId: PROFILE_ID, ...(styles ? { styles } : {}) };
   return validatePage(manifest, options).diagnostics.map((d) => d.code);
@@ -118,6 +125,54 @@ describe("lettering styles", () => {
     );
     expect(housed).toContain('data-part="label-brackets"');
     expect(housed).toContain('data-style="notice"');
+  });
+
+  test("house rules reshape a register's outline", () => {
+    const m = page([balloon("dialogue", { tail: TAIL }, { text: "It's new." })], SPEAKER);
+    const drawn = requireSvg(renderPage(m, { locale: "en", profileId: PROFILE_ID }));
+    const housed = requireSvg(
+      renderPage(m, {
+        locale: "en",
+        profileId: PROFILE_ID,
+        styles: { dialogue: { edge: "smooth" } },
+      }),
+    );
+    const smooth = page(
+      [balloon("dialogue", { tail: TAIL, edge: "smooth" }, { text: "It's new." })],
+      SPEAKER,
+    );
+    const direct = requireSvg(renderPage(smooth, { locale: "en", profileId: PROFILE_ID }));
+    expect(outline(housed)).not.toBe(outline(drawn));
+    expect(outline(housed)).toBe(outline(direct));
+  });
+
+  test("house rules set a register's line weight", () => {
+    const m = page([balloon("dialogue", { tail: TAIL }, { text: "It's new." })], SPEAKER);
+    const plain = requireSvg(renderPage(m, { locale: "en", profileId: PROFILE_ID }));
+    const housed = requireSvg(
+      renderPage(m, {
+        locale: "en",
+        profileId: PROFILE_ID,
+        styles: { dialogue: { strokeWidth: 6 } },
+      }),
+    );
+    expect(outline(plain)).toContain('stroke-width="10.00"');
+    expect(outline(housed)).toContain('stroke-width="6.00"');
+  });
+
+  test("a balloon's own line weight still wins over the house rule", () => {
+    const m = page(
+      [balloon("dialogue", { tail: TAIL, strokeWidth: 9 }, { text: "It's new." })],
+      SPEAKER,
+    );
+    const svg = requireSvg(
+      renderPage(m, {
+        locale: "en",
+        profileId: PROFILE_ID,
+        styles: { dialogue: { strokeWidth: 6 } },
+      }),
+    );
+    expect(outline(svg)).toContain('stroke-width="9.00"');
   });
 
   test("one page carrying two registers embeds both faces, each once", () => {

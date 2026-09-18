@@ -95,6 +95,10 @@ function readStyle(
         if (key === "tail") patch.tail = value;
         else patch.label = value;
       } else errors.push(`${style}.${key} must be one of ${REQUIREMENTS.join(", ")}.`);
+    } else if (key === "strokeWidth") {
+      if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+        patch.strokeWidth = value;
+      } else errors.push(`${style}.strokeWidth must be a positive number.`);
     } else if (key === "labelBrackets") {
       if (typeof value === "boolean") patch.labelBrackets = value;
       else errors.push(`${style}.labelBrackets must be true or false.`);

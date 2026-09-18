@@ -83,3 +83,55 @@ describe("validatePage", () => {
     expect(r.diagnostics.some((d) => d.code === "UNKNOWN_ANCHOR")).toBe(true);
   });
 });
+
+describe("tail reach", () => {
+  // "It's new." fits this placement without growing it: the body's bottom edge is y = 320.
+  function spoken(mouth: { x: number; y: number }): unknown {
+    return {
+      schemaVersion: "0.1.0",
+      pageId: "tail-reach",
+      coordinateSpace: { width: 1200, height: 760, origin: "top-left", units: "art-px" },
+      renderProfile: { id: PROFILE_ID, version: "0.1.0" },
+      subjects: [
+        {
+          id: "lex",
+          bounds: { x: mouth.x - 60, y: mouth.y - 40, width: 120, height: 120 },
+          anchors: { mouth },
+        },
+      ],
+      exclusionZones: [],
+      items: [
+        {
+          kind: "balloon",
+          id: "B01",
+          panelId: "P01",
+          speakerId: "lex",
+          shapeId: "speech",
+          style: "dialogue",
+          placement: { x: 120, y: 140, width: 520, height: 180 },
+          tail: { subjectId: "lex", anchor: "mouth", attachment: "auto" },
+          content: { en: { text: "It's new." } },
+        },
+      ],
+    };
+  }
+
+  const codes = (m: unknown): string[] =>
+    validatePage(m, { locale: "en", profileId: PROFILE_ID }).diagnostics.map((d) => d.code);
+
+  test("a tail whose tip lies inside its own balloon is refused", () => {
+    const r = validatePage(spoken({ x: 380, y: 250 }), { locale: "en", profileId: PROFILE_ID });
+    expect(r.valid).toBe(false);
+    expect(r.diagnostics.find((d) => d.code === "TAIL_TOO_SHORT")?.itemId).toBe("B01");
+  });
+
+  test("a tail too short to read as a tail is refused", () => {
+    expect(codes(spoken({ x: 380, y: 340 }))).toContain("TAIL_TOO_SHORT");
+  });
+
+  test("a tail with room to reach its speaker passes", () => {
+    const r = validatePage(spoken({ x: 380, y: 440 }), { locale: "en", profileId: PROFILE_ID });
+    expect(r.diagnostics.map((d) => d.code)).not.toContain("TAIL_TOO_SHORT");
+    expect(r.valid).toBe(true);
+  });
+});

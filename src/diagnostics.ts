@@ -19,6 +19,7 @@ const LEVEL: Record<DiagnosticCode, DiagnosticLevel> = {
   BALLOON_OVERLAP: "warning",
   SOFT_EXCLUSION_OVERLAP: "warning",
   TAIL_CROSSES_BODY: "warning",
+  TAIL_TOO_SHORT: "error",
   READING_ORDER_AMBIGUOUS: "warning",
   STYLE_RULE: "error",
 };

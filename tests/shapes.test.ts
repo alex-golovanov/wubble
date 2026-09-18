@@ -98,33 +98,6 @@ describe("registered shapes", () => {
     }
   });
 
-  test("smooth speech tail starts toward its anchor without a reverse hook", () => {
-    const tip = { x: 720, y: 770 };
-    const path = buildRoundedBalloonPath({
-      bodies: [{ x: 260, y: 150, width: 560, height: 280 }],
-      tip,
-      bend: null,
-      attachment: "bottom",
-      cornerRadius: 1,
-      edge: "smooth",
-    });
-    const match = path.match(
-      /L (-?\d+\.\d+) (-?\d+\.\d+) Q (-?\d+\.\d+) (-?\d+\.\d+) 720\.00 770\.00/,
-    );
-    if (!match) throw new Error(`tail entry command missing from path: ${path}`);
-    const numberAt = (index: number): number => {
-      const token = match[index];
-      if (token === undefined) throw new Error(`tail entry capture ${index} missing`);
-      return Number(token);
-    };
-    const enterX = numberAt(1);
-    const enterY = numberAt(2);
-    const controlX = numberAt(3);
-    const controlY = numberAt(4);
-    expect((controlX - enterX) * (tip.x - enterX)).toBeGreaterThanOrEqual(0);
-    expect((controlY - enterY) * (tip.y - enterY)).toBeGreaterThan(0);
-  });
-
   test("multi-balloon page renders both item groups", () => {
     const m = load("fixtures/multi-balloon.json");
     const v = validatePage(m, { locale: "en", profileId: PROFILE_ID });

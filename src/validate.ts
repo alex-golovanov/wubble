@@ -9,7 +9,7 @@ import {
   resolveStyleProfile,
   styleOf,
 } from "./profile";
-import { boundsInside, rectsOverlap, segmentCrossesBounds } from "./collisions";
+import { boundsInside, distanceOutside, rectsOverlap, segmentCrossesBounds } from "./collisions";
 import type {
   BalloonItem,
   Diagnostic,
@@ -143,7 +143,7 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
 
     const fonts = letterFontsFor(style, binding, options.styles);
     const placement = resolvePlacement(item, locale);
-    const fitStyle = fitStyleOf(item);
+    const fitStyle = fitStyleOf(item, options.styles);
     const layout = fitBalloonText(content, placement, item.id, item.shapeId, fitStyle, fonts);
     diagnostics.push(...layout.diagnostics);
     if (!layout.fitted) continue;
@@ -216,7 +216,22 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
     // Anchor
     const { tip, error } = resolveAnchor(manifest, item);
     if (error) diagnostics.push(error);
-    if (tip) tipsByItem.set(item.id, tip);
+    if (tip) {
+      tipsByItem.set(item.id, tip);
+      const reach = distanceOutside(tip, body);
+      const needed = Math.min(body.width, body.height) / 4;
+      if (reach < needed) {
+        diagnostics.push(
+          diag(
+            "TAIL_TOO_SHORT",
+            reach === 0
+              ? `Tail tip lies inside the balloon; the balloon has grown over its speaker.`
+              : `Tail reaches ${Math.round(reach)} px past the balloon; it needs ${Math.round(needed)} px to read as a tail.`,
+            { itemId: item.id },
+          ),
+        );
+      }
+    }
   }
 
   // Balloon-balloon overlaps

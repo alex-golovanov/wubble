@@ -25,6 +25,19 @@ describe("project config", () => {
     expect(errors.some((e) => e.includes("notice.label"))).toBe(true);
   });
 
+  test("reads a register's line weight", () => {
+    const { config, errors } = parseRenderConfig({ styles: { dialogue: { strokeWidth: 6 } } });
+    expect(errors).toEqual([]);
+    expect(config.styles?.dialogue?.strokeWidth).toBe(6);
+  });
+
+  test("refuses a line weight that is not a positive number", () => {
+    const zero = parseRenderConfig({ styles: { dialogue: { strokeWidth: 0 } } });
+    const word = parseRenderConfig({ styles: { caption: { strokeWidth: "thin" } } });
+    expect(zero.errors.some((e) => e.includes("dialogue.strokeWidth"))).toBe(true);
+    expect(word.errors.some((e) => e.includes("caption.strokeWidth"))).toBe(true);
+  });
+
   test("an empty config is valid and changes nothing", () => {
     const { config, errors } = parseRenderConfig({});
     expect(errors).toEqual([]);
