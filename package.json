@@ -27,7 +27,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "fontkit": "^2.0.4",
-    "sharp": "^0.33.5"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/bun": "latest",
