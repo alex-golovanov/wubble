@@ -19,7 +19,7 @@ function baseManifest(
     schemaVersion: "0.1.0",
     pageId,
     coordinateSpace: { width: 1400, height: 1200, origin: "top-left", units: "art-px" },
-    renderProfile: { id: "rift-city-proof", version: "0.1.0" },
+    renderProfile: { id: "wubble-default", version: "0.1.0" },
     subjects: [
       {
         id: "who",
@@ -72,7 +72,7 @@ const cells = [];
 for (const v of variants) {
   const result = renderPage(baseManifest(v.name, v.extra, v.lines), {
     locale: "en",
-    profileId: "rift-city-proof",
+    profileId: "wubble-default",
   });
   if (!result.svg) {
     console.error("FAIL", v.name, JSON.stringify(result.diagnostics, null, 2));
@@ -138,7 +138,7 @@ for (const v of stressVariants) {
   const stressPlacement = { x: 300, y: 260, width: 720, height: 300 };
   const result = renderPage(baseManifest(v.name, v.extra, v.lines, stressPlacement), {
     locale: "en",
-    profileId: "rift-city-proof",
+    profileId: "wubble-default",
   });
   if (!result.svg) {
     console.error("FAIL", v.name, JSON.stringify(result.diagnostics, null, 2));

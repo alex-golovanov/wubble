@@ -11,6 +11,7 @@ export type DiagnosticCode =
   | "TEXT_OVERFLOW"
   | "OUT_OF_BOUNDS"
   | "HARD_EXCLUSION_OVERLAP"
+  | "UNKNOWN_PROFILE"
   | "UNKNOWN_SHAPE"
   | "UNKNOWN_ANCHOR"
   | "BALLOON_OVERLAP"

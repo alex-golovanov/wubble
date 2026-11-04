@@ -75,16 +75,23 @@ export function validatePage(manifestInput: unknown, options: RenderOptions): Di
   }
   const manifest = schema.manifest;
 
-  if (options.profileId !== PROFILE_ID && options.profileId !== manifest.renderProfile.id) {
-    // Allow matching either explicit option or manifest profile id when option equals profile
+  if (options.profileId !== PROFILE_ID) {
+    diagnostics.push(
+      diag("UNKNOWN_PROFILE", `Requested profile "${options.profileId}" is not available.`),
+    );
   }
-  // Require known profile
   if (
     manifest.renderProfile.id !== PROFILE_ID ||
     manifest.renderProfile.version !== PROFILE.version
   ) {
-    // Still proceed for proof if id matches rift-city-proof; otherwise schema already constrained loosely
+    diagnostics.push(
+      diag(
+        "UNKNOWN_PROFILE",
+        `Manifest profile "${manifest.renderProfile.id}@${manifest.renderProfile.version}" is not available.`,
+      ),
+    );
   }
+  if (diagnostics.length > 0) return makeReport(diagnostics, manifest.pageId, options.locale);
 
   const locale = options.locale;
   const binding = resolveFontBinding(options.fonts);

@@ -85,7 +85,8 @@ function seedPlacement(id) {
 }
 
 function tipFor(id, body) {
-  const tipY = body.y + body.height + 36;
+  // Leave room for text-driven growth; the seed is not the fitted body.
+  const tipY = PAGE - 300;
   const tipX =
     body.x +
     body.width * (id === "lightning" ? 0.28 : id === "hook" ? 0.38 : id === "needle" ? 0.5 : 0.55);
@@ -157,7 +158,7 @@ for (const id of REF_SHAPE_IDS) {
       origin: "top-left",
       units: "art-px",
     },
-    renderProfile: { id: "rift-city-proof", version: "0.1.0" },
+    renderProfile: { id: "wubble-default", version: "0.1.0" },
     subjects: [
       {
         id: "speaker",
@@ -169,10 +170,9 @@ for (const id of REF_SHAPE_IDS) {
     items: [item],
   };
 
-  const result = renderPage(manifest, { locale: "en", profileId: "rift-city-proof" });
+  const result = renderPage(manifest, { locale: "en", profileId: "wubble-default" });
   if (!result.svg) {
-    console.error(id, "FAILED", JSON.stringify(result.diagnostics, null, 2));
-    continue;
+    throw new Error(`${id} failed: ${JSON.stringify(result.diagnostics, null, 2)}`);
   }
 
   const label =

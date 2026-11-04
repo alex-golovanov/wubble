@@ -14,6 +14,7 @@ const LEVEL: Record<DiagnosticCode, DiagnosticLevel> = {
   TEXT_OVERFLOW: "error",
   OUT_OF_BOUNDS: "error",
   HARD_EXCLUSION_OVERLAP: "error",
+  UNKNOWN_PROFILE: "error",
   UNKNOWN_SHAPE: "error",
   UNKNOWN_ANCHOR: "error",
   BALLOON_OVERLAP: "warning",

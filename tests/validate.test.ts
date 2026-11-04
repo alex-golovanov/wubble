@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { validatePage } from "../src/index";
+import { renderPage, validatePage } from "../src/index";
 import { PROFILE_ID, isShapeImplemented } from "../src/profile";
 
 const root = join(import.meta.dir, "..");
@@ -15,6 +15,33 @@ describe("validatePage", () => {
     expect(en.valid).toBe(true);
     expect(ru.valid).toBe(true);
     expect(en.pageId).toBe("P022");
+  });
+
+  test("rejects an unknown requested profile instead of rendering with the default", () => {
+    const m = load("examples/page-022.json");
+    const options = { locale: "en", profileId: "unknown-profile" };
+    const report = validatePage(m, options);
+    expect(report.valid).toBe(false);
+    expect(report.diagnostics.some((d) => d.code === "UNKNOWN_PROFILE")).toBe(true);
+    expect(renderPage(m, options).svg).toBeNull();
+  });
+
+  test("rejects an unknown manifest profile or profile version", () => {
+    const m = load("examples/page-022.json");
+    if (m === null || typeof m !== "object" || Array.isArray(m)) {
+      throw new Error("expected an example object");
+    }
+    const options = { locale: "en", profileId: PROFILE_ID };
+    for (const renderProfile of [
+      { id: "unknown-profile", version: "0.1.0" },
+      { id: PROFILE_ID, version: "99.0.0" },
+    ]) {
+      const invalid = { ...m, renderProfile };
+      const report = validatePage(invalid, options);
+      expect(report.valid).toBe(false);
+      expect(report.diagnostics.some((d) => d.code === "UNKNOWN_PROFILE")).toBe(true);
+      expect(renderPage(invalid, options).svg).toBeNull();
+    }
   });
 
   test("SCHEMA_INVALID for bad manifest", () => {

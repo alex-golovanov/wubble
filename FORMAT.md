@@ -395,6 +395,7 @@ Structured report:
 | `TEXT_OVERFLOW`           | error   | Cannot fit within type / line / expand limits                               |
 | `OUT_OF_BOUNDS`           | error   | Body (or lobe) leaves the coordinate space                                  |
 | `HARD_EXCLUSION_OVERLAP`  | error   | Body covers a hard exclusion                                                |
+| `UNKNOWN_PROFILE`         | error   | Requested or manifest profile ID / version is not available                 |
 | `UNKNOWN_SHAPE`           | error   | Shape not implemented in profile                                            |
 | `UNKNOWN_ANCHOR`          | error   | Tail subject/anchor missing                                                 |
 | `BALLOON_OVERLAP`         | warning | Two balloon bodies overlap                                                  |
