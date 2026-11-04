@@ -1,111 +1,72 @@
 # wubble
 
-Deterministic comic-lettering engine. Turns a page manifest into separate language-specific transparent SVG balloon overlays. A human or an LLM may author the manifest; **wubble** alone owns geometry, font measurement, validation, and SVG serialization. It never invents dialogue and never redraws the comic art.
+**Letter a comic page in more than one language without changing the artwork.** Wubble takes a page manifest with dialogue, placements, and speaker anchors, then produces a transparent SVG lettering overlay for each requested locale.
 
-Formerly specified as Clip Balloon / clip-balloon. The CLI binary is **`wubble`**.
+![English and Russian versions of the same speech balloon rendered by Wubble](docs/images/language-overlays.png)
 
-## Start here
+_Close-ups of the English and Russian overlays rendered from the same bundled example. The white background is for viewing; the SVG overlays are transparent._
 
-- [`FORMAT.md`](FORMAT.md) — **readable format handbook** (manifest, shapes, knobs, diagnostics, examples)
-- [`schemas/page.schema.json`](schemas/page.schema.json) — manifest schema `0.1.0`
-- [`SPEC.md`](SPEC.md) — historical product / rendering contract (see note at top)
-- [`examples/page-022.json`](examples/page-022.json) — bilingual example
-- [`references/speech.svg`](references/speech.svg) — human balloon visual reference
+The dialogue and art remain yours: Wubble does not write or translate text, draw the underlying page, or automatically find the best positions. It handles the repeatable lettering work—measuring text against bundled fonts, drawing balloons and tails, and checking the manifest for problems before it renders.
 
-## Install
+## What it does
 
-```sh
-bun install
-```
+- **Separate language overlays:** keep dialogue IDs and speaker anchors consistent while changing the text, line breaks, or placement for each locale.
+- **Measured lettering:** shape and measure text with bundled fonts, fit it within the specified bounds, and embed the fonts in the resulting SVG.
+- **Balloons and styles:** choose from registered shapes, adjust outlines and tails, and use project-specific style and font settings without changing the renderer.
+- **Actionable checks:** report issues such as missing translations or anchors, text overflow, and hard exclusion overlaps.
+- **Repeatable output:** the same normalized inputs, renderer version, and font bytes produce the same SVG bytes.
 
-Requires [Bun](https://bun.sh) ≥ 1.3.
+A person or an LLM can author the manifest. Wubble validates and renders it; it does not call an LLM or image generator.
 
-## Check / lint / format
+## Try the example
 
-Uses **TypeScript** (`tsc --noEmit`, maximally strict — see `tsconfig.json` / `AGENTS.md`), **oxlint** (type-aware via `oxlint-tsgolint`), **oxfmt**, and an assertion ban script.
+Requires [Bun](https://bun.sh/) **1.3 or newer**. From a checkout of this repository:
 
 ```sh
-bun run typecheck    # tsc --noEmit
-bun run lint         # oxlint .  (bans `as` assertions + non-null `!`)
-bun run lint:fix    # oxlint --fix .
-bun run assertions   # fail on `as const` / `as T` / `!` in src+tests
-bun run fmt          # oxfmt .
-bun run fmt:check    # oxfmt --check .
-bun run check        # typecheck + lint + assertions + fmt:check
+bun install --frozen-lockfile
+mkdir -p out
+
+# Validate the sample in each locale
+bun run wubble validate examples/page-022.json --locale en
+bun run wubble validate examples/page-022.json --locale ru
+
+# Render page-sized transparent SVG overlays
+bun run wubble render examples/page-022.json --locale en --output out/page-en.svg
+bun run wubble render examples/page-022.json --locale ru --output out/page-ru.svg
 ```
 
-TypeScript style for agents: **no** `as T`, **no** `as const`, **no** non-null `!` — use `satisfies`, type guards, and narrowing (`AGENTS.md`, `.cursor/rules/typescript-strict.mdc`).
-
-`typescript/dot-notation` rejects `PROFILE.shapes["speech"]`-style string indexing — use `PROFILE.shapes.speech` or `shapeProfile(id)`.
-
-## CLI
+The example contains an English and a Russian version of the same lettering. `out/` is ignored by Git. To composite an overlay over your own artwork as a PNG proof, use the `proof` command:
 
 ```sh
-bun run wubble -- validate examples/page-022.json
-bun run wubble -- render examples/page-022.json --locale en --output page-022.en.svg
-bun run wubble -- render examples/page-022.json --locale ru --output page-022.ru.svg
-bun run wubble -- proof examples/page-022.json --locale en --art page-022.png --output page-022.en.proof.png
+bun run wubble proof examples/page-022.json --locale en \
+  --art path/to/artwork.png --output out/page-proof.png
 ```
 
-Or via the bin after linking:
+Use artwork with the same proportions as the manifest's coordinate space; the proof command resizes the overlay to the supplied image. A proof is a review aid, not a replacement for the original artwork or a print-ready page.
 
-```sh
-bunx wubble validate examples/page-022.json
-```
+## How it works
 
-All commands accept `--diagnostics <file.json>`.
+A manifest describes the page dimensions, subjects and named anchors, areas to avoid, balloon placements, and localized text. Wubble validates that input, measures the text, builds balloon and tail geometry, and serializes an SVG overlay for the requested locale. Diagnostics explain errors and warnings, and rendering is refused when error-level diagnostics are present.
 
-Exit codes: `0` ok · `1` validation failed · `2` usage/IO · `3` internal.
+The bundled profile provides neutral defaults. Supply a JSON configuration with `--config` to adjust a project's styles, typefaces, and rules. See [FORMAT.md](FORMAT.md) for the manifest, shape catalogue, configuration, and diagnostics, and [the schema](schemas/page.schema.json) for the machine-readable contract.
 
-`render` / `proof` refuse to write output when any error-level diagnostic is present.
-
-## Library
+For programmatic use, the package exports `validatePage` and `renderPage`:
 
 ```ts
 import { validatePage, renderPage } from "wubble";
 
 const report = validatePage(manifest, { locale: "en", profileId: "wubble-default" });
-const { svg, diagnostics } = renderPage(manifest, { locale: "ru", profileId: "wubble-default" });
+const { svg, diagnostics } = renderPage(manifest, {
+  locale: "ru",
+  profileId: "wubble-default",
+});
 ```
 
-## Shapes (profile `wubble-default` @ `0.1.0`)
-
-All registered ids are implemented:
-
-| Family       | IDs                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------- |
-| Rounded-rect | `speech`                                                                              |
-| Ref sheet    | `chain`, `cloud`, `needle`, `round`, `hook`, `lightning`, `fluffy`, `thought`, `rect` |
-
-`speech` is the single public rounded-rect shape (open-tail builder). Looks (soft / square / jagged / notched) are authoring knobs, not separate shapeIds. See [`FORMAT.md`](FORMAT.md) for recipes and content bands.
-
-## Balloon styling knobs
-
-Optional per-balloon fields (schema `0.1.0`):
-
-- **`cornerRadius`** — `0..1` × `min(body.w, body.h) / 2`. `0` = sharp rectangle, `1` = full pill. Default for `speech`: `1`.
-- **`edge`** — `smooth` \| `jagged`. Jagged + low radius → angular outline. Default for `speech`: `smooth`.
-- **`notchTop`** — boolean; lightning notch on the top edge (`speech` only; ref shapes ignore). Default `false`.
-- **`fill` / `stroke` / `strokeWidth`** — optional appearance overrides; default from `PROFILE.shapes.speech`.
-- **`lobes`** — additional `{ placement, content }` lobes fused with the primary body into one chained silhouette (open necks, no crossbars; one tail).
-
-Geometry is a single closed path with an **open tail join** (no crossbar cutting the tip). A style may instead choose a **drawn body** (`body: "drawn"`): an inked oval or pillow shaped around its text, with tails that vary and carry a mood. On the rounded body, a smooth or hand-edged tail has a slim throat, bends gently from the edge toward its speaker, and flows into the outline through rounded joins; a `jagged` tail keeps its hard kink. Ref-sheet shapes map fixed templates; they ignore radius/edge for the silhouette.
-
-**Text-driven sizing:** measure text → expand body with padding → map silhouette (then shrink type only if expand limits are exhausted).
-
-## Font strategy
-
-Bundled default **Noto Sans Regular** (OFL) at `assets/fonts/NotoSans-Regular.otf` (Latin + Cyrillic). Digested in the render profile. Additional font assets do not replace the default. Text is shaped and measured with `fontkit` from the configured file; the font is embedded as a base64 `@font-face` data URL in each SVG so overlays are self-contained and OS fonts are never consulted. Missing glyphs → `GLYPH_MISSING`.
-
-## Status
-
-Schema validation (Ajv draft 2020-12), full shape catalog above, bilingual overlays, locale overrides, tail→anchor, structured diagnostics, deterministic SVG bytes (fixed precision, LF, no timestamps/random). Beyond the original Milestone A+B proof: ref-sheet shapes, corner/edge knobs, lobes, and text-driven fit. Details in [`FORMAT.md`](FORMAT.md).
-
-## Tests and typecheck
+## Development
 
 ```sh
-bun test
-bunx tsc --noEmit
+bun test       # tests
+bun run check  # typecheck, lint, assertion scan, and formatting check
 ```
 
-Or `bun run typecheck` (same as `tsc --noEmit`).
+The bundled fonts and their SIL Open Font License notices are in [`assets/fonts/`](assets/fonts/). [`SPEC.md`](SPEC.md) records the initial proof contract; [`FORMAT.md`](FORMAT.md) describes the current format and behavior.
