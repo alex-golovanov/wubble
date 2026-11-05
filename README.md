@@ -109,4 +109,4 @@ bun run check  # typecheck, lint, assertion scan, and formatting check
 
 ## Licensing
 
-No license has been specified for Wubble’s source code. The bundled fonts have separate SIL Open Font License notices in [`assets/fonts/`](assets/fonts/).
+Wubble’s source code and documentation are available under the [MIT License](LICENSE). The bundled fonts have separate SIL Open Font License notices in [`assets/fonts/`](assets/fonts/). The Rift City comic artwork shown above is not covered by the MIT License and remains the property of its copyright holder.
