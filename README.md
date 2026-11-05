@@ -2,9 +2,17 @@
 
 **Letter a comic page in more than one language without changing the artwork.** Wubble takes a page manifest with dialogue, placements, and speaker anchors, then produces a transparent SVG lettering overlay for each requested locale.
 
+<img src="docs/images/comic-page-example.png" width="720" alt="Rift City comic page with Wubble speech balloons and announcement boxes">
+
+_A draft lettering composite on page 11 of Rift City Comics, using its scripted dialogue and project configuration. Wubble rendered the SVG overlay; a browser composited it over the artwork. The placement is an example, not an approved final page._
+
+![Nine Wubble balloon shapes: chain, cloud, needle, round, hook, lightning, fluffy, thought, and rect](docs/images/shape-examples.png)
+
+_Nine balloon shapes rendered by Wubble. Each retains its shape and lettering as a transparent SVG overlay._
+
 ![English and Russian versions of the same speech balloon rendered by Wubble](docs/images/language-overlays.png)
 
-_Close-ups of the English and Russian overlays rendered from the same bundled example. The white background is for viewing; the SVG overlays are transparent._
+_English and Russian close-ups from the same bundled example. The white background is for viewing; the SVG overlays are transparent._
 
 The dialogue and art remain yours: Wubble does not write or translate text, draw the underlying page, or automatically find the best positions. It handles the repeatable lettering work—measuring text against bundled fonts, drawing balloons and tails, and checking the manifest for problems before it renders.
 
@@ -42,7 +50,7 @@ bun run wubble proof examples/page-022.json --locale en \
   --art path/to/artwork.png --output out/page-proof.png
 ```
 
-Use artwork with the same proportions as the manifest's coordinate space; the proof command resizes the overlay to the supplied image. A proof is a review aid, not a replacement for the original artwork or a print-ready page.
+Use artwork with the same proportions as the manifest's coordinate space; the proof command resizes the overlay to the supplied image. A proof is a review aid, not a replacement for the original artwork or a print-ready page. On some systems the PNG proof renderer may substitute fonts embedded in the SVG; compare the proof with the SVG in a browser before relying on its lettering.
 
 ## How it works
 
