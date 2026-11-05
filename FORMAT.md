@@ -91,7 +91,7 @@ Stable identifier for the page (appears in diagnostics).
 { "id": "wubble-default", "version": "0.1.0" }
 ```
 
-Binds fill/stroke, padding, font, and fit limits from the compiled profile in `src/profile.ts`. The proof profile continues to embed **Noto Sans Regular** (Latin + Cyrillic) and digest the font bytes.
+Binds fill/stroke, padding, fonts, and fit limits from the compiled profile in `src/profile.ts`. By default, dialogue uses Shantell Sans SemiBold, and notices and their labels use Oswald Medium. Wubble embeds the fonts actually used in each SVG; project configuration can select other registered fonts.
 
 ### `subjects` / `exclusionZones` / `items`
 
@@ -282,7 +282,7 @@ Every balloon has a **style** — a lettering register named for its form, never
 
 | Style      | What it is                                       |
 | ---------- | ------------------------------------------------ |
-| `dialogue` | someone speaking; drawn outline, tail permitted  |
+| `dialogue` | someone speaking; tail permitted                 |
 | `notice`   | a squared, strict, formal box; may carry a label |
 | `caption`  | a plain box with no speaker and no tail          |
 
@@ -301,6 +301,8 @@ Wubble ships neutral defaults for each. What a style looks like, whether it may 
 ```sh
 wubble render page.json --locale en --output page.svg --config rules.json
 ```
+
+The registered font IDs are `shantell-sans-semibold`, `noto-sans-regular`, `ibm-plex-mono-regular`, `jetbrains-mono-regular`, `roboto-mono-regular`, and `oswald-medium`. The font roles are `dialogue`, `notice`, and `noticeLabel`.
 
 Library callers pass the same thing as `RenderOptions.styles` / `.fonts`. `tail` and `label` each take `required`, `allowed` or `forbidden`, and the validator reports `STYLE_RULE` when a manifest breaks them. A style may also set its outline — `cornerRadius` (0–1) and `edge` (`smooth`, `jagged`, `hand`) — its line weight, `strokeWidth` (art px), and its `fill` (`#rrggbb`). A balloon's own `cornerRadius`, `edge`, `fill` or `strokeWidth` still wins over its style.
 

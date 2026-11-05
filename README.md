@@ -58,6 +58,34 @@ A manifest describes the page dimensions, subjects and named anchors, areas to a
 
 The bundled profile provides neutral defaults. Supply a JSON configuration with `--config` to adjust a project's styles, typefaces, and rules. See [FORMAT.md](FORMAT.md) for the manifest, shape catalogue, configuration, and diagnostics, and [the schema](schemas/page.schema.json) for the machine-readable contract.
 
+## Configure a project
+
+A configuration file can choose bundled typefaces and set rules for each lettering style. For example, save this as `rules.json`:
+
+```json
+{
+  "fonts": {
+    "dialogue": "shantell-sans-semibold",
+    "notice": "oswald-medium"
+  },
+  "styles": {
+    "dialogue": { "body": "drawn", "tail": "allowed", "label": "forbidden" },
+    "notice": { "tail": "forbidden", "label": "required", "labelBrackets": true }
+  }
+}
+```
+
+Pass it to any command with `--config`:
+
+```sh
+bun run wubble render examples/page-022.json --locale en \
+  --config rules.json --output out/page-en.svg
+```
+
+Fonts are selected from Wubble’s bundled registry; a font family installed on your computer cannot be supplied by name. See [FORMAT.md](FORMAT.md#lettering-styles) for the registered fonts and available style settings.
+
+## Library API
+
 For programmatic use, the package exports `validatePage` and `renderPage`:
 
 ```ts
@@ -77,4 +105,8 @@ bun test       # tests
 bun run check  # typecheck, lint, assertion scan, and formatting check
 ```
 
-The bundled fonts and their SIL Open Font License notices are in [`assets/fonts/`](assets/fonts/). [`SPEC.md`](SPEC.md) records the initial proof contract; [`FORMAT.md`](FORMAT.md) describes the current format and behavior.
+[`SPEC.md`](SPEC.md) records the initial proof contract; [`FORMAT.md`](FORMAT.md) describes the current format and behavior.
+
+## Licensing
+
+No license has been specified for Wubble’s source code. The bundled fonts have separate SIL Open Font License notices in [`assets/fonts/`](assets/fonts/).
